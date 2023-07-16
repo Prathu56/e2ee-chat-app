@@ -22,6 +22,8 @@ router.post('/', async (req, res) => {
         // Ecrypt user's private key using their password, and delete user.priv
         user.privEnc = aesEncrypt(user.priv, password); delete user.priv;
 
+        // Initialize 'chats' key with an empty object
+        user.chats = {};
         
         // Create user's entry in database
         await users.insertOne(user);

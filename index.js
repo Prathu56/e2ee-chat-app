@@ -4,65 +4,15 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-const register = require('./routes/register');
-
-app.use('/register', register);
+app.use('/register', require('./routes/register'));
+app.use('/login', require('./routes/login'));
+app.use('/chats', require('./routes/chats'));
 
 connect();
 
 app.listen(3000, () => {
     console.log('Server running on port 3000')
 });
-
-// // LOGIN FUNCTION//
-
-// const login = async (username, password) => {
-//     if (await bcrypt.compare(password, db.users[username].password)) {
-//         let localStorage = {};
-
-//         // Decrypt the encrypted private key stored in the database, and store it in localStorage
-//         localStorage.priv = aesDecrypt(db.users[username].privEnc, password);
-//         return localStorage;
-//     } else {
-//         console.log("Could not log in"); return;
-//     }
-// };
-
-// // LOGIN FUNCTION//
-
-
-// // SENDING MESSAGE //
-
-// console.log("\n\n---SENDING MESSAGE---");
-// // Assume Alice wants to Send a message to Bob, firstly she will login
-// alice = await login("alice", alicePass);
-// console.log("Alice's localStorage after login =", alice);
-
-// // As no previous chats with Bob exist, she'll create an object on the database
-// db.chats.alicebob = { users: ["alice", "bob"], messages: [] };
-
-// // Let's create a messageObj with 'from' and 'content', as a string
-// let messageObj = JSON.stringify({ 
-//     from: 0, // Since Alice is at index 0 in the chats' users array
-//     content: message 
-// });
-
-// // Compute the shared key with Bob using his public key
-// let sharedKey = ecdhCompute(alice.priv, db.users.bob.pub);
-
-// // Now use this shared key to encrypt the messageObj
-// let encMessage = aesEncrypt(messageObj, sharedKey);
-
-// // Upload this encrypted message to the database
-// db.chats.alicebob.messages.push(encMessage);
-
-// // Resetting so we don't use the previously generated readymade values
-// alice = sharedKey = encMessage = messageObj = message = undefined;
-
-// // SENDING MESSAGE //
-
-// console.log("\nChats collection after sending the message =", db.chats);
-// console.log("---SENDING MESSAGE---");
 
 // // READING MESSAGES //
 
