@@ -1,5 +1,5 @@
-﻿# E2EE with ECDH
-An implementation of E2EE (End-to-End Encryption) using the ECDH  (Elliptic Curve Diffie Hellman) key exchange
+# E2EE with ECDH
+An implementation of E2EE (End-to-End Encryption) using the ECDH (Elliptic Curve Diffie Hellman) key exchange
  
 This is a simple demonstration using Node.JS
 Use the comments and the console logs to understand the implementation
