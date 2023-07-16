@@ -1,150 +1,119 @@
-const bcrypt = require('bcrypt');
-const { aesEncrypt, aesDecrypt, ecdhGenerate, ecdhCompute } = require('./helpers/cryptography');
+const express = require('express');
+const { connect } = require('./helpers/mongoUtil');
 require('dotenv').config();
+const app = express();
+app.use(express.json());
 
-// -------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------
-let message = "Kisiko mat batana thike?"; // The message to be sent //
+const register = require('./routes/register');
 
-// Passwords for both users
-const alicePass = "AliceKaPasswordVerySecure#4#4";
-const bobPass = "UskaPasswordKamjorHiHai5M#";
+app.use('/register', register);
 
-// Assume this as the database
-// Assume key as the _id and value as the other fields of a document
-let db = {users: {}, chats: {}};
+connect();
 
-// Assume these are the localStorage of both users
-let alice, bob;
-// -------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------
+app.listen(3000, () => {
+    console.log('Server running on port 3000')
+});
 
-(async () => {
-    // REGISTRATION //
+// // LOGIN FUNCTION//
 
-    const register = async (username, password) => {
-        // Generate ECDH key pair, creating user.pub and user.priv
-        let user = ecdhGenerate();
-        
-        // Upload user's password's hash to the database
-        user.password = await bcrypt.hash(password, 10);
+// const login = async (username, password) => {
+//     if (await bcrypt.compare(password, db.users[username].password)) {
+//         let localStorage = {};
 
-        // Ecrypt user's private key using their password, and delete user.priv
-        user.privEnc = aesEncrypt(user.priv, password); delete user.priv;
+//         // Decrypt the encrypted private key stored in the database, and store it in localStorage
+//         localStorage.priv = aesDecrypt(db.users[username].privEnc, password);
+//         return localStorage;
+//     } else {
+//         console.log("Could not log in"); return;
+//     }
+// };
 
-        // Create user's entry in database
-        db.users[username] = user;
-    };
+// // LOGIN FUNCTION//
 
-    await register("alice", alicePass);
-    await register("bob", bobPass);
 
-    // REGISTRATION //
-    console.log("\n---REGISTRATION---");
-    console.log("Users collection after registration =", db.users);
-    console.log("---REGISTRATION---");
+// // SENDING MESSAGE //
 
-    // LOGIN FUNCTION//
+// console.log("\n\n---SENDING MESSAGE---");
+// // Assume Alice wants to Send a message to Bob, firstly she will login
+// alice = await login("alice", alicePass);
+// console.log("Alice's localStorage after login =", alice);
 
-    const login = async (username, password) => {
-        if (await bcrypt.compare(password, db.users[username].password)) {
-            let localStorage = {};
+// // As no previous chats with Bob exist, she'll create an object on the database
+// db.chats.alicebob = { users: ["alice", "bob"], messages: [] };
 
-            // Decrypt the encrypted private key stored in the database, and store it in localStorage
-            localStorage.priv = aesDecrypt(db.users[username].privEnc, password);
-            return localStorage;
-        } else {
-            console.log("Could not log in"); return;
-        }
-    };
+// // Let's create a messageObj with 'from' and 'content', as a string
+// let messageObj = JSON.stringify({ 
+//     from: 0, // Since Alice is at index 0 in the chats' users array
+//     content: message 
+// });
 
-    // LOGIN FUNCTION//
+// // Compute the shared key with Bob using his public key
+// let sharedKey = ecdhCompute(alice.priv, db.users.bob.pub);
 
-    
-    // SENDING MESSAGE //
+// // Now use this shared key to encrypt the messageObj
+// let encMessage = aesEncrypt(messageObj, sharedKey);
 
-    console.log("\n\n---SENDING MESSAGE---");
-    // Assume Alice wants to Send a message to Bob, firstly she will login
-    alice = await login("alice", alicePass);
-    console.log("Alice's localStorage after login =", alice);
+// // Upload this encrypted message to the database
+// db.chats.alicebob.messages.push(encMessage);
 
-    // As no previous chats with Bob exist, she'll create an object on the database
-    db.chats.alicebob = { users: ["alice", "bob"], messages: [] };
+// // Resetting so we don't use the previously generated readymade values
+// alice = sharedKey = encMessage = messageObj = message = undefined;
 
-    // Let's create a messageObj with 'from' and 'content', as a string
-    let messageObj = JSON.stringify({ 
-        from: 0, // Since Alice is at index 0 in the chats' users array
-        content: message 
-    });
+// // SENDING MESSAGE //
 
-    // Compute the shared key with Bob using his public key
-    let sharedKey = ecdhCompute(alice.priv, db.users.bob.pub);
+// console.log("\nChats collection after sending the message =", db.chats);
+// console.log("---SENDING MESSAGE---");
 
-    // Now use this shared key to encrypt the messageObj
-    let encMessage = aesEncrypt(messageObj, sharedKey);
+// // READING MESSAGES //
 
-    // Upload this encrypted message to the database
-    db.chats.alicebob.messages.push(encMessage);
+// console.log("\n\n---READING MESSAGES---");
 
-    // Resetting so we don't use the previously generated readymade values
-    alice = sharedKey = encMessage = messageObj = message = undefined;
-    
-    // SENDING MESSAGE //
+// const readMessages = (encKey) => {
+//     for (let i=0;i<db.chats.alicebob.messages.length;i++) {
+//         encMessage = db.chats.alicebob.messages[i];
 
-    console.log("\nChats collection after sending the message =", db.chats);
-    console.log("---SENDING MESSAGE---");
+//         // Decrypt the message first using the shared key
+//         let decMessage = aesDecrypt(encMessage, encKey);
 
-    // READING MESSAGES //
+//         // Parse the JSON
+//         decMessage = JSON.parse(decMessage);
 
-    console.log("\n\n---READING MESSAGES---");
+//         // Use the 'from' value to identify which user sent the message
+//         let from = db.chats.alicebob.users[decMessage.from];
 
-    const readMessages = (encKey) => {
-        for (let i=0;i<db.chats.alicebob.messages.length;i++) {
-            encMessage = db.chats.alicebob.messages[i];
-    
-            // Decrypt the message first using the shared key
-            let decMessage = aesDecrypt(encMessage, encKey);
-    
-            // Parse the JSON
-            decMessage = JSON.parse(decMessage);
-    
-            // Use the 'from' value to identify which user sent the message
-            let from = db.chats.alicebob.users[decMessage.from];
-    
-            // Display the message nicely
-            console.log(from + ": " + decMessage.content)
-        }
-    };
-    
-    // We can read the posted messages both as Alice and Bob
-    // Since Bob is the recipient, let's read them as him first
-    // To do that, firstly log in as Bob
-    bob = await login("bob", bobPass);
-    console.log("Bob's localStorage after login =", bob);
+//         // Display the message nicely
+//         console.log(from + ": " + decMessage.content)
+//     }
+// };
 
-    // Compute the shared key as Bob
-    sharedKey = ecdhCompute(bob.priv, db.users.alice.pub);
+// // We can read the posted messages both as Alice and Bob
+// // Since Bob is the recipient, let's read them as him first
+// // To do that, firstly log in as Bob
+// bob = await login("bob", bobPass);
+// console.log("Bob's localStorage after login =", bob);
 
-    // Now to read all the chats between Alice and Bob
-    console.log("\nChat as read by Bob:");
-    readMessages(sharedKey);
+// // Compute the shared key as Bob
+// sharedKey = ecdhCompute(bob.priv, db.users.alice.pub);
 
-    // Resetting variables
-    bob = sharedKey = undefined;
+// // Now to read all the chats between Alice and Bob
+// console.log("\nChat as read by Bob:");
+// readMessages(sharedKey);
 
-    // Now let's read the messages as Alice
-    // First, log in as Alice
-    alice = await login("alice", alicePass);
-    console.log("\n\nAlice's localStorage after login =", alice);
+// // Resetting variables
+// bob = sharedKey = undefined;
 
-    // Compute the shared key as Alice
-    sharedKey = ecdhCompute(alice.priv, db.users.bob.pub);
+// // Now let's read the messages as Alice
+// // First, log in as Alice
+// alice = await login("alice", alicePass);
+// console.log("\n\nAlice's localStorage after login =", alice);
 
-    // Now to read all the chats between Alice and Bob
-    console.log("\nChat as read by Alice:");
-    readMessages(sharedKey);
+// // Compute the shared key as Alice
+// sharedKey = ecdhCompute(alice.priv, db.users.bob.pub);
 
-    console.log("---READING MESSAGES---");
-    
-    // READING MESSAGES //
-})();
+// // Now to read all the chats between Alice and Bob
+// console.log("\nChat as read by Alice:");
+// readMessages(sharedKey);
+
+// console.log("---READING MESSAGES---");
+
+// // READING MESSAGES //
