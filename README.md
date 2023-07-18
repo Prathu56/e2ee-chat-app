@@ -2,9 +2,10 @@
 An implementation of E2EE (End-to-End Encryption) using the ECDH (Elliptic Curve Diffie Hellman) key exchange
  
 This is the E2EE entirely on the server side.  
-I acknowledge that realistically, this is impractical. In this implementation, we need to assume total trust that the server won't store our private keys, be it storage or database. This helps us understand how the messages would be stored on an actual database.
+I acknowledge that realistically, this is impractical. In this implementation, we need to assume total trust that the server won't store our private keys, be it storage or database. This helps us understand how the messages would be stored on an actual database.  
+In reality, private keys should never be shared with the server.  
 
-I'll create an API documentation for this branch when the development is complete.
+I'm updating the API documentation soon.
 
 ## Installation
 - Install the required node packages using `npm i`  
