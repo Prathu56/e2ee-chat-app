@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
     try {
+        if (req.body.username == "You" || req.body.username == "Notes") throw 409;
         let password = req.body.password;
 
         const users = getDb().collection('users');
@@ -31,6 +32,7 @@ router.post('/', async (req, res) => {
         res.status(201).send("Successfully registered as " + user._id);
     } catch (e) {
         let code = 500, message = e.message;
+        if (e == 409) { code = e; message = "Please use another username and try again" }
         if (e.code == 11000) { code = 409; message = "Username already in use" }
         res.status(code).send(message);
     }
