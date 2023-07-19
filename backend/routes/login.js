@@ -1,15 +1,13 @@
 const express = require('express');
+const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const { getDb } = require('../helpers/mongoUtil');
+const { users } = require('../models');
 const { aesDecrypt } = require('../helpers/cryptography');
-const router = express.Router();
 
 router.post('/', async (req, res) => {
     try {
-        const users = getDb().collection('users');
-        const user = await users.findOne({ _id: req.body.username }, 
-            { projection: { password: 1, privEnc: 1 }});
+        const user = await users.findById(req.body.username, 'password privEnc');
         if (!user) throw 400;
 
         if (await bcrypt.compare(req.body.password, user.password)) {

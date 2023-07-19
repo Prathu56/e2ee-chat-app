@@ -1,48 +1,40 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
-const auth = require('../helpers/auth');
-const { getDb } = require('../helpers/mongoUtil');
-const { aesEncrypt, ecdhCompute, aesDecrypt } = require('../helpers/cryptography');
 const router = express.Router();
+const auth = require('../helpers/auth');
+const { users, chats } = require('../models');
+const { aesEncrypt, ecdhCompute, aesDecrypt } = require('../helpers/cryptography');
 
 router.post('/:username', auth, async (req, res) => {
     try {
         const unameA = req.user.username;
         const unameB = req.params.username;
 
-        const users = getDb().collection('users');
-        const userB = await users.findOne({ _id: unameB }, { projection: { pub: 1, chats: 1, _id: 0 } });
+        const userB = await users.findById(unameB).lean();
         if (!userB) throw 404;
         
-        const chats = getDb().collection('chats');
-
+        let chat;
         if (!(unameA in userB.chats)) { // No chat initiated before, initiating now
-            const chat = { messages: [] };
-
-            let result = await chats.insertOne(chat);
+            chat = await chats.create({ messages: [] });
 
             // Create a new object under the users' chats as { username: chatId }
-            await users.updateOne({ _id: unameB }, { $set: { ['chats.' + unameA]: result.insertedId } });
+            await users.findByIdAndUpdate(unameB, { [`chats.${unameA}`]: chat._id }, { new: true });
 
             if (unameA != unameB) { // No need to add again if message is to self
-                await users.updateOne({ _id: unameA }, { $set: { ['chats.' + unameB]: result.insertedId } });
+                await users.findByIdAndUpdate(unameA, { [`chats.${unameB}`]: chat._id }, { new: true });
             }
-            
-            // Update userB object
-            userB.chats[unameA] = result.insertedId;
-        }
+        } else chat = await chats.findById(userB.chats[unameA]);
 
         // Let's create a messageObj with 'from' and 'content', as a string
         const messageObj = JSON.stringify({ from: unameA, content: req.body.message, at: new Date() });
 
         // Compute the shared key
-        const sharedKey = ecdhCompute(req.body.priv, userB.pub);
+        const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
         
         // Now use this shared key to encrypt the messageObj
         const encMessage = aesEncrypt(messageObj, sharedKey);
         
         // Upload this encrypted message to the database
-        await chats.updateOne({ _id: userB.chats[unameA] }, { $push: { messages: encMessage } });
+        chat.messages.push(encMessage); await chat.save();
 
         if (unameA != unameB) res.status(200).send("Message sent to " + unameB);
         else res.status(200).send("Note taken");
@@ -58,8 +50,7 @@ router.get('/:username', auth, async (req, res) => {
         const unameA = req.user.username;
         const unameB = req.params.username;
 
-        const users = getDb().collection('users');
-        const userB = await users.findOne({ _id: unameB }, { projection: { pub: 1, chats: 1, _id: 0 } });
+        const userB = await users.findById(unameB, 'pub');
         if (!userB) throw 404;
 
         // Check if chat with user exists
@@ -67,17 +58,16 @@ router.get('/:username', auth, async (req, res) => {
         const chatId = userB.chats[unameA];
 
         // Compute the shared key
-        const sharedKey = ecdhCompute(req.body.priv, userB.pub);
+        const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
 
-        const chats = getDb().collection('chats');
-        let chat = await chats.findOne({ _id: chatId }, { projection: { _id: 0 } });
+        // const chats = getDb().collection('chats');
+        let chat = await chats.findById(chatId).lean();
 
         chat = chat.messages.reverse();
-
         for (let i=0;i<chat.length;i++) {
             // Decrypt the content
             chat[i] = aesDecrypt(chat[i], sharedKey);
-
+            
             // Parse the JSON
             chat[i] = JSON.parse(chat[i]);
 
@@ -104,10 +94,7 @@ router.get('/:username', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
     try {
         const unameA = req.user.username;
-
-        const chats = getDb().collection('chats');
-        const users = getDb().collection('users');
-        const userA = await users.findOne({ _id: unameA }, { projection: { chats: 1, _id: 0 } });
+        const userA = await users.findById(unameA).lean();
 
         // Convert the object to array
         let chatList = Object.entries(userA.chats);
@@ -120,13 +107,13 @@ router.get('/', auth, async (req, res) => {
             const chatId = chatList[i][1];
 
             // Get the last chat with the chatId
-            let chat = await chats.findOne({ _id: chatId }, { projection: { messages: { $slice: -1 } } });
+            let chat = await chats.findById(chatId, { messages: { $slice: -1 } }).lean();;
 
             // Get the public key of the userB
-            const userB = await users.findOne({ _id: unameB }, { projection: { pub: 1, _id: 0 } });
+            const userB = await users.findById(unameB, 'pub');
 
             // Compute the shared key with the userB using their public key
-            const sharedKey = ecdhCompute(req.body.priv, userB.pub);
+            const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
 
             // Decrypt the message using the shared key
             chat = aesDecrypt(chat.messages[0], sharedKey);
