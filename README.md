@@ -1,4 +1,4 @@
-# E2EE with ECDH
+# Chat-Nat (formerly E2EE with ECDH)
 An implementation of E2EE (End-to-End Encryption) using the ECDH (Elliptic Curve Diffie Hellman) key exchange
  
 This is the E2EE used in a webapp built using the MERN stack.
