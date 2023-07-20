@@ -1,4 +1,4 @@
-const users = require('./users');
-const chats = require('./chats');
+const users = require('./userModel');
+const chats = require('./chatModel');
 
 module.exports = { users, chats };
