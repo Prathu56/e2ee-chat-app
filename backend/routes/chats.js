@@ -95,6 +95,7 @@ router.get('/', auth, async (req, res) => {
 	try {
 		const unameA = req.user.username;
 		const userA = await users.findById(unameA).lean();
+		if (Object.keys(userA.chats).length === 0) throw 404;
 
 		// Convert the object to array
 		let chatList = Object.entries(userA.chats);
@@ -145,9 +146,9 @@ router.get('/', auth, async (req, res) => {
 
 		res.status(200).send(chatList);
 	} catch (e) {
+		console.log(e)
 		let code = 500, message = e.message;
-		if (e == 403) { code = e, message = "Cannot send a message to self" }
-		if (e == 404) { code = e, message = "User not found" }
+		if (e == 404) { code = e, message = "No chats found" }
 		res.status(code).send(message);
 	}
 });

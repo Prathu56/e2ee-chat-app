@@ -1,31 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { aesEncrypt, ecdhGenerate } from "../helpers/cryptography";
+import { useRegister } from "../hooks/useRegister";
 
 const Register = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
-	const [alertType, setAlertType] = useState('');
-	const [alertMessage, setAlertMessage] = useState('');
+	const { register, alertType, alertMessage, isLoading } = useRegister();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setAlertType(''); setAlertMessage('');
-
-		let { pub, priv } = await ecdhGenerate();
-		const privEnc = aesEncrypt(priv, password);
-
-		const response = await fetch('/api/register', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ username, password, pub, privEnc })
-		});
-
-		const json = await response.json();
-
-		if (!response.ok) setAlertType('fail');
-		if (response.ok) setAlertType('success');
-		setAlertMessage(json.message);
+		
+		await register(username, password);
 	};
 
 	return (
@@ -80,7 +64,7 @@ const Register = () => {
 						</div>
 
 						<div>
-							<button
+							<button disabled={isLoading}
 								type="submit"
 								className="flex w-full justify-center rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
 							>
@@ -100,15 +84,6 @@ const Register = () => {
 							{alertMessage}
 						</div>
 					)}
-
-					<p className="mt-10 text-center text-sm text-gray-500">
-						Already have an account?{' '}
-						<Link to='/login'>
-							<span className="font-semibold leading-6 text-cyan-600 hover:text-cyan-500">
-								Login
-							</span>
-						</Link>
-					</p>
 				</div>
 			</div>
 		</>
