@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
 		let code = 500, message = e.message;
 		if (e == 409) { code = e; message = "Please use another username and try again" }
 		if (e.code == 11000) { code = 409; message = "Username already in use" }
-		res.status(code).send({error: message});
+		res.status(code).send({message});
 	}
 });
 

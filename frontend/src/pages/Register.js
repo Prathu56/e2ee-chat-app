@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useRegister } from "../hooks/useRegister";
 
 const Register = () => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
-	const { register, error, message } = useRegister();
+	const [alertType, setAlertType] = useState('');
+	const [alertMessage, setAlertMessage] = useState('');
+
+	const register = async (username, password) => {
+		setAlertType(''); setAlertMessage('');
+
+		const response = await fetch('/api/register', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password })
+		});
+
+		const json = await response.json();
+
+		if (!response.ok) setAlertType('fail');
+		if (response.ok) setAlertType('success');
+		setAlertMessage(json.message);
+	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
-		await register(username, password);
+		register(username, password);
 	}
 
 	return (
@@ -74,15 +89,17 @@ const Register = () => {
 						</div>
 					</form>
 
-					{error &&
-					<div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-						{error}
-					</div>}
+					{alertType === 'success' && (
+						<div className="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
+							{alertMessage}
+						</div>
+					)}
 
-					{message &&
-					<div className="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
-						{message}
-					</div>}
+					{alertType === 'fail' && (
+						<div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+							{alertMessage}
+						</div>
+					)}
 
 					<p className="mt-10 text-center text-sm text-gray-500">
 						Already have an account?{' '}
