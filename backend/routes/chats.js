@@ -146,7 +146,6 @@ router.get('/', auth, async (req, res) => {
 
 		res.status(200).send(chatList);
 	} catch (e) {
-		console.log(e)
 		let code = 500, message = e.message;
 		if (e == 404) { code = e, message = "No chats found" }
 		res.status(code).send(message);
