@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { aesEncrypt, ecdhGenerate } from "../helpers/cryptography";
 
 const Register = () => {
 	const [username, setUsername] = useState('');
@@ -7,13 +8,17 @@ const Register = () => {
 	const [alertType, setAlertType] = useState('');
 	const [alertMessage, setAlertMessage] = useState('');
 
-	const register = async (username, password) => {
+	const handleSubmit = async (e) => {
+		e.preventDefault();
 		setAlertType(''); setAlertMessage('');
+
+		let { pub, priv } = await ecdhGenerate();
+		const privEnc = aesEncrypt(priv, password);
 
 		const response = await fetch('/api/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ username, password })
+			body: JSON.stringify({ username, password, pub, privEnc })
 		});
 
 		const json = await response.json();
@@ -22,11 +27,6 @@ const Register = () => {
 		if (response.ok) setAlertType('success');
 		setAlertMessage(json.message);
 	};
-
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		register(username, password);
-	}
 
 	return (
 		<>
