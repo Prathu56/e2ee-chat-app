@@ -13,7 +13,7 @@ function App() {
 		<div className="App">
 			<BrowserRouter>
 				<Navbar />
-				<div className='pages'>
+				<div className='page'>
 					<Routes>
 						<Route path='/'
 							element={user ? <Home /> : <Navigate to='/login' />}
