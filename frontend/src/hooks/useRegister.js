@@ -2,13 +2,13 @@ import { useState } from "react"
 import { aesEncrypt, ecdhGenerate } from "../helpers/cryptography";
 
 export const useRegister = () => {
-	const [alertType, setAlertType] = useState(null); // changed
-	const [alertMessage, setAlertMessage] = useState(null); // changed
+	const [alertType, setAlertType] = useState(null);
+	const [alertMessage, setAlertMessage] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	
 	const register = async (username, password) => {
-		setAlertType(null); // changed
-		setAlertMessage(null); // changed
+		setAlertType(null);
+		setAlertMessage(null);
 		setIsLoading(true);
 
 		let { pub, priv } = await ecdhGenerate();

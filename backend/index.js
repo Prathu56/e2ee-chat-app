@@ -7,7 +7,7 @@ app.use(express.json());
 app.use('/api/register', require('./routes/register'));
 app.use('/api/login', require('./routes/login'));
 app.use('/api/chats', require('./routes/chats'));
-app.use('/api/verify', require('./routes/verify'));
+app.use('/api/helpers', require('./helpers'));
 
 (async () => {
 	try {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../helpers/auth');
+const auth = require('../middleware/auth');
 const { users, chats } = require('../models');
 
 router.post('/:username', auth, async (req, res) => {
@@ -23,16 +23,7 @@ router.post('/:username', auth, async (req, res) => {
 			}
 		} else chat = await chats.findById(userB.chats[unameA]);
 
-		// // Let's create a messageObj with 'from' and 'content', as a string
-		// const messageObj = JSON.stringify({ from: unameA, content: req.body.message, at: new Date() });
-
-		// // Compute the shared key
-		// const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
-
-		// // Now use this shared key to encrypt the messageObj
-		// const encMessage = aesEncrypt(messageObj, sharedKey);
-
-		// Upload this encrypted message to the database
+		// Upload message to database
 		chat.messages.push(req.body.message); await chat.save();
 
 		if (unameA != unameB) message = "Message sent to " + unameB;
@@ -135,9 +126,6 @@ router.get('/', auth, async (req, res) => {
 			// // Or if the message was sent by the logged in user, replace the from field with "You"
 			// else if (chat.from === unameA) chat.from = "You"
 
-			// // Convert date to number for sorting later on
-			// chat.at = new Date(chat.at).getTime();
-
 			// Update the index at chatlist with an object like this
 			chatList[i] = {
 			// 	// If the chat is with self, replace the 'with' field with 'Notes'
@@ -146,11 +134,8 @@ router.get('/', auth, async (req, res) => {
 			};
 		}
 
-		// // Sort the chats in a descending order of the time of the last message
-		// chatList.sort((a, b) => b.at - a.at);
-
-		// // Convert the 'at' number back to date
-		// for (let i = 0; i < chatList.length; i++) { chatList[i].at = new Date(chatList[i].at); }
+		// Sort the chats in a descending order of the time of the last message
+		chatList.sort((a, b) => b.at - a.at);
 
 		res.status(200).send(chatList);
 	} catch (e) {

@@ -1,3 +1,6 @@
+import { useState } from "react"
+import MessageModal from "../components/MessageModal";
+
 const people = [
 	{
 		name: 'Leslie Alexander',
@@ -101,32 +104,37 @@ const people = [
 ]
 
 export default function Home() {
+	const [showModal, setShowModal] = useState(false);
+
 	return (
-		<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
-			{people.map((person) => (
-				<li key={person.email} className="flex justify-between gap-x-6 p-5">
-					<div className="flex gap-x-4">
-						<div className="min-w-0 flex-auto">
-							<p className="font-semibold leading-6 text-gray-900">{person.name}</p>
-							<p className="mt-3 truncate leading-5 text-gray-500">{person.email}</p>
+		<>
+			<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
+				{people.map((person) => (
+					<li key={person.email} className="flex justify-between gap-x-6 py-5 px-7">
+						<div className="flex gap-x-4">
+							<div className="min-w-0 flex-auto">
+								<p className="font-semibold leading-6 text-gray-900">{person.name}</p>
+								<p className="mt-3 truncate leading-5 text-gray-700">{person.email}</p>
+							</div>
 						</div>
-					</div>
-					<div className="flex flex-col items-end">
-						{person.lastSeen ? (
-							<p className="leading-5 text-gray-500">
+						<div className="flex flex-col items-end">
+							<p className="leading-5 text-gray-400">
 								<time dateTime={person.lastSeenDateTime}>{person.lastSeen}</time>
 							</p>
-						) : (
-							<div className="flex items-center gap-x-1.5">
-								<div className="flex-none rounded-full bg-emerald-500/20 p-1">
-									<div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-								</div>
-								<p className="text-xs leading-5 text-gray-500">Online</p>
-							</div>
-						)}
-					</div>
-				</li>
-			))}
-		</ul>
+						</div>
+					</li>
+				))}
+			</ul>
+
+			<MessageModal isVisible={showModal} onClose={() => setShowModal(false)}/>
+
+			<button
+				onClick={() => setShowModal(!showModal)}
+				className="fixed z-90 bottom-16 right-16 bg-cyan-600 w-16 h-16 rounded-full drop-shadow-lg flex justify-center items-center text-white text-4xl hover:bg-cyan-700 hover:drop-shadow-2xl"
+			>
+				+
+			</button>
+
+		</>
 	)
 }
