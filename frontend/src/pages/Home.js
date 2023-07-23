@@ -1,132 +1,51 @@
-import { useState } from "react"
+import TimeAgo from 'react-timeago';
+import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
 import MessageModal from "../components/MessageModal";
+import { useFetchMessages } from "../hooks/useFetchMessages";
 
-const people = [
-	{
-		name: 'Leslie Alexander',
-		email: 'leslie.alexander@example.com',
-		role: 'Co-Founder / CEO',
-		imageUrl:
-			'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Michael Foster',
-		email: 'michael.foster@example.com',
-		role: 'Co-Founder / CTO',
-		imageUrl:
-			'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Dries Vincent',
-		email: 'dries.vincent@example.com',
-		role: 'Business Relations',
-		imageUrl:
-			'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Lindsay Walton',
-		email: 'lindsay.walton@example.com',
-		role: 'Front-end Developer',
-		imageUrl:
-			'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Courtney Henry',
-		email: 'courtney.henry@example.com',
-		role: 'Designer',
-		imageUrl:
-			'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-	{
-		name: 'Tom Cook',
-		email: 'tom.cook@example.com',
-		role: 'Director of Product',
-		imageUrl:
-			'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-		lastSeen: '3h ago',
-		lastSeenDateTime: '2023-01-23T13:23Z',
-	},
-]
-
-export default function Home() {
+const Home = () => {
 	const [showModal, setShowModal] = useState(false);
+	const { fetchMessages, error, messages } = useFetchMessages();
+
+	useEffect(() => {
+		(async () => {
+			if (messages.length === 0) await fetchMessages();
+		})();
+	}, [])
 
 	return (
 		<>
+			{error && (
+				<div className="p-4 my-4 text-lg text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
+					{error}
+				</div>
+			)}
+
 			<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
-				{people.map((person) => (
-					<li key={person.email} className="flex justify-between gap-x-6 py-5 px-7">
-						<div className="flex gap-x-4">
-							<div className="min-w-0 flex-auto">
-								<p className="font-semibold leading-6 text-gray-900">{person.name}</p>
-								<p className="mt-3 truncate leading-5 text-gray-700">{person.email}</p>
+				{messages.map((message) => (
+					<Link to={'/chats/' + message.with}>
+						<li key={message.with} className="flex justify-between gap-x-6 py-5 px-7">
+							<div className="flex gap-x-4">
+								<div className="min-w-0 flex-auto">
+									<p className="font-bold leading-6 text-gray-900 text-xl">{message.with}</p>
+									<p className="mt-3 truncate leading-5 text-gray-700">
+										{(message.from === "You") && <span><strong>You:</strong>: </span>}
+										{message.content}
+									</p>
+								</div>
 							</div>
-						</div>
-						<div className="flex flex-col items-end">
-							<p className="leading-5 text-gray-400">
-								<time dateTime={person.lastSeenDateTime}>{person.lastSeen}</time>
-							</p>
-						</div>
-					</li>
+							<div className="flex flex-col items-end">
+								<p className="leading-5 text-gray-400">
+									<TimeAgo date={message.at} />
+								</p>
+							</div>
+						</li>
+					</Link>
 				))}
 			</ul>
 
-			<MessageModal isVisible={showModal} onClose={() => setShowModal(false)}/>
+			<MessageModal isVisible={showModal} onClose={() => setShowModal(false)} />
 
 			<button
 				onClick={() => setShowModal(!showModal)}
@@ -138,3 +57,5 @@ export default function Home() {
 		</>
 	)
 }
+
+export default Home;

@@ -1,29 +1,25 @@
 import { useState } from "react";
 import { useAuthContext } from "./useAuthContext";
-import { aesEncrypt, ecdhCompute } from "../helpers/cryptography"
+import { aesEncrypt } from "../helpers/cryptography"
 
 export const useSendMessage = () => {
-	const [alertType, setAlertType] = useState(null);
+	const [success, setSuccess] = useState(null);
 	const [alertMessage, setAlertMessage] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const { user } = useAuthContext();
 
-	const sendMessage = async (priv, userB, content) => {
-		setAlertType(null);
+	const sendMessage = async (unameB, sharedKey, content) => {
+		setSuccess(null);
 		setAlertMessage(null); 
 		setIsLoading(true);
 
 		// Let's create a messageObj with 'from' and 'content', as a string
 		const messageObj = JSON.stringify({ from: user.username, content, at: new Date() });
 
-		// Compute the shared key
-		const sharedKey = await ecdhCompute(priv, userB.pub);
-		console.log(sharedKey)
-
 		// Now use this shared key to encrypt the messageObj
 		const encMessage = aesEncrypt(messageObj, sharedKey);
 
-		const response = await fetch('/api/chats/' + userB.username, {
+		const response = await fetch('/api/chats/' + unameB, {
 			method: 'POST',
 			headers: {
 				'Authorization': `Bearer ${user.token}`,
@@ -35,18 +31,18 @@ export const useSendMessage = () => {
 		const json = await response.json();
 
 		if (!response.ok) {
-			setAlertType('fail');
+			setSuccess(false);
 			setIsLoading(false);
 		}
 		if (response.ok) {
-			setAlertType('success');
+			setSuccess(true);
 			setIsLoading(false);
 		}
 		setAlertMessage(json.message);
 	};
 
 	return { 
-		sendMessage, alertType, alertMessage, isLoading,
-		setAlertType, setAlertMessage, setIsLoading
+		sendMessage, success, alertMessage, isLoading,
+		setSuccess, setAlertMessage, setIsLoading
 	};
 }

@@ -50,25 +50,9 @@ router.get('/:username', auth, async (req, res) => {
 
 		// Get the _id of chat, set the userB's public key to a variable
 		const chatId = userB.chats[unameA]; const pub = userB.pub;
-		
-		// // Compute the shared key
-		// const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
 
 		let chat = await chats.findById(chatId).lean();
 		chat = chat.messages.reverse(); // so the most recent appears at the top
-
-		// for (let i = 0; i < chat.length; i++) {
-		// 	// Decrypt the content
-		// 	chat[i] = aesDecrypt(chat[i], sharedKey);
-
-		// 	// Parse the JSON
-		// 	chat[i] = JSON.parse(chat[i]);
-
-		// 	// If the chat is with self, remove the from field
-		// 	if (unameA == unameB) delete chat[i].from;
-		// 	// Or if the message was sent by the logged in user, replace the from field with "You"
-		// 	else if (chat[i].from === unameA) chat[i].from = "You";
-		// }
 
 		res.status(200).send({ pub, chat });
 	} catch (e) {
@@ -102,7 +86,7 @@ router.get('/', auth, async (req, res) => {
 
 			// Get the public key of the userB
 			const { pub } = await users.findById(unameB, 'pub').lean();
-			
+
 			// Get the last chat with the chatId
 			let chat = await chats.findById(chatId, { messages: { $slice: -1 }, updatedAt: 1 }).lean();
 
@@ -128,7 +112,7 @@ router.get('/', auth, async (req, res) => {
 
 			// Update the index at chatlist with an object like this
 			chatList[i] = {
-			// 	// If the chat is with self, replace the 'with' field with 'Notes'
+				// 	// If the chat is with self, replace the 'with' field with 'Notes'
 				with: unameB,
 				...chat
 			};
@@ -140,8 +124,8 @@ router.get('/', auth, async (req, res) => {
 		res.status(200).send(chatList);
 	} catch (e) {
 		let code = 500, message = e.message;
-		if (e == 404) { code = e, message = "No chats found" }
-		res.status(code).send(message);
+		if (e == 404) { code = e, message = "No chats found. Click on the '+' below to send a message" }
+		res.status(code).send({ message });
 	}
 });
 

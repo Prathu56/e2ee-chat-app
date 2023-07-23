@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { ecdhCompute } from "../helpers/cryptography";
 
 const MessageModal = ({ isVisible, onClose }) => {
 	const [username, setUsername] = useState('');
 	const [message, setMessage] = useState('');
 	const { user } = useAuthContext();
 	const {
-		sendMessage, alertType, alertMessage, isLoading,
-		setAlertType, setAlertMessage, setIsLoading
+		sendMessage, success, alertMessage, isLoading,
+		setSuccess, setAlertMessage, setIsLoading
 	} = useSendMessage();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setAlertType(null);
-		setAlertMessage(null); 
+		setSuccess(null);
+		setAlertMessage(null);
 		setIsLoading(true);
 
-		const response = await fetch ('/api/helpers/get-pub/' + username, {
+		const response = await fetch('/api/helpers/get-pub/' + username, {
 			method: 'GET',
 			headers: { 'Authorization': `Bearer ${user.token}` }
 		});
@@ -25,13 +26,15 @@ const MessageModal = ({ isVisible, onClose }) => {
 		const json = await response.json();
 
 		if (!response.ok) {
-			setAlertType('fail');
+			setSuccess(false);
 			setIsLoading(false);
 			setAlertMessage(json.message);
-			setUsername(''); setMessage('');
 		}
 		if (response.ok) {
-			await sendMessage(user.priv, json, message);
+			// Compute the shared key
+			const sharedKey = await ecdhCompute(user.priv, json.pub);
+
+			await sendMessage(username, sharedKey, message);
 			setIsLoading(false);
 			setUsername(''); setMessage('');
 		}
@@ -50,7 +53,7 @@ const MessageModal = ({ isVisible, onClose }) => {
 			onClick={handleClose}>
 			<div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm bg-gray-100 p-5 rounded-2xl">
 				<form className="space-y-6"
-				onSubmit={handleSubmit}
+					onSubmit={handleSubmit}
 				>
 					<div>
 						<label htmlFor="username" className="block text-sm font-medium leading-6 text-gray-900">
@@ -103,13 +106,13 @@ const MessageModal = ({ isVisible, onClose }) => {
 					</div>
 				</form>
 
-				{alertType === 'success' && (
+				{(success === true) && (
 					<div className="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
 						{alertMessage}
 					</div>
 				)}
 
-				{alertType === 'fail' && (
+				{(success === false) && (
 					<div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
 						{alertMessage}
 					</div>
