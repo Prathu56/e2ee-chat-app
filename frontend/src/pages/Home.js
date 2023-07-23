@@ -17,20 +17,22 @@ const Home = () => {
 	return (
 		<>
 			{error && (
-				<div className="p-4 my-4 text-lg text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
+				<div className="p-4 my-4 text- text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
 					{error}
 				</div>
 			)}
 
 			<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
 				{messages.map((message) => (
-					<Link to={'/chats/' + message.with}>
-						<li key={message.with} className="flex justify-between gap-x-6 py-5 px-7">
+					<li key={message.with}>
+						{/* <a href={'/chats/' + message.with} */}
+						<Link to={'/chats/' + message.with}
+							className='flex justify-between gap-x-6 py-5 px-7 bg-gray-100 hover:bg-gray-200'>
 							<div className="flex gap-x-4">
 								<div className="min-w-0 flex-auto">
-									<p className="font-bold leading-6 text-gray-900 text-xl">{message.with}</p>
+									<p className="font-bold leading-6 text-gray-900 text-lg">{message.with}</p>
 									<p className="mt-3 truncate leading-5 text-gray-700">
-										{(message.from === "You") && <span><strong>You:</strong>: </span>}
+										{(message.from === "You") && <span className='font-semibold'>You: </span>}
 										{message.content}
 									</p>
 								</div>
@@ -40,8 +42,9 @@ const Home = () => {
 									<TimeAgo date={message.at} />
 								</p>
 							</div>
-						</li>
-					</Link>
+						</Link>
+						{/* </a> */}
+					</li>
 				))}
 			</ul>
 

@@ -23,11 +23,20 @@ export const useFetchMessages = () => {
 
 		if (response.ok) {
 			for (let i=0;i<json.length;i++) {
+				// Compute shared key
 				const sharedKey = await ecdhCompute(user.priv, json[i].pub);
+
+				// Decrypt message
 				let message = aesDecrypt(json[i].message, sharedKey);
+
+				// Parse JSON
 				message = JSON.parse(message);
+
+				// If message from logged in user, ...
 				message.from = (message.from === user.username) ? "You" : message.from;
+
 				json[i] = { 
+					// If chat with self, ...
 					with: (json[i].with === user.username) ? "Notes" : json[i].with, 
 					...message}
 			}

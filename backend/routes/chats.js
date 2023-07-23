@@ -96,26 +96,8 @@ router.get('/', auth, async (req, res) => {
 			chat.at = chat.updatedAt;
 			delete chat.messages; delete chat.updatedAt; delete chat._id;
 
-			// // Compute the shared key with the userB using their public key
-			// const sharedKey = ecdhCompute(req.headers.priv, userB.pub);
-
-			// // Decrypt the message using the shared key
-			// chat = aesDecrypt(chat.messages[0], sharedKey);
-
-			// // Parse the JSON
-			// chat = JSON.parse(chat);
-
-			// If the chat is with self, remove the from field
-			// if (unameA == unameB) delete chat.from;
-			// // Or if the message was sent by the logged in user, replace the from field with "You"
-			// else if (chat.from === unameA) chat.from = "You"
-
 			// Update the index at chatlist with an object like this
-			chatList[i] = {
-				// 	// If the chat is with self, replace the 'with' field with 'Notes'
-				with: unameB,
-				...chat
-			};
+			chatList[i] = { with: unameB, ...chat };
 		}
 
 		// Sort the chats in a descending order of the time of the last message
