@@ -2,45 +2,99 @@ import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useParams } from "react-router-dom";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { ecdhCompute } from "../helpers/cryptography";
+import { useFetchChat } from "../hooks/useFetchChat";
+import { useSendMessage } from "../hooks/useSendMessage";
+import { useRef } from 'react';
 
 const Chat = () => {
 	let { unameB } = useParams();
 	const navigate = useNavigate();
-	const [pub, setPub] = useState(null);
+	const bottomMost = useRef(null);
+	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
+	const { fetchChat, messages, fetchError } = useFetchChat();
 	const { user } = useAuthContext();
+	const { sendMessage, error, setError, isLoading, setIsLoading } = useSendMessage();
 
 	useEffect(() => {
 		(async () => {
-			if (unameB !== "Notes") {
-				const response = await fetch('/api/helpers/get-pub/' + unameB, {
-					method: 'GET',
-					headers: { 'Authorization': `Bearer ${user.token}` }
-				});
+			if (unameB === "Notes") unameB = user.username;
 
-				let json = await response.json();
+			const response = await fetch('/api/helpers/get-pub/' + unameB, {
+				method: 'GET',
+				headers: { 'Authorization': `Bearer ${user.token}` }
+			});
 
-				if (!response.ok) {
-					alert(json.message);
-					navigate('/', { replace: true });
-				}
+			let json = await response.json();
 
-				if (response.ok) {
-					setPub(json.pub);
-				}
-			}
+			if (!response.ok) navigate('/', { replace: true });
+			if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
 		})();
 	}, [])
 
+	useEffect(() => {
+		(async () => {
+			if (sharedKey !== null) {
+				if (unameB === "Notes") unameB = user.username;
+				await fetchChat(sharedKey, unameB);
+				setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
+			}
+		})();
+	}, [sharedKey]);
+
+	const handleClick = async (e) => {
+		// e.preventDefault();
+		if (unameB === "Notes") unameB = user.username;
+		await sendMessage(unameB, sharedKey, message);
+		setMessage('');
+		await fetchChat(sharedKey, unameB);
+		setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
+	}
+
 	return (
 		<>
-			<div className="fixed z-90 bg-cyan-700 mx-auto w-screen flex flex-row justify-center p-3">
+			<div className="sticky z-90 bg-cyan-700 mx-auto flex flex-row justify-center p-3 top-16 inset-y-0">
 				<div className="justify-center items-center bg-gray-100 border-0 focus:outline-none rounded text-base px-2 font-semibold text-gray-700 truncate">
 					{unameB}
 				</div>
 			</div>
 
-			<div className="fixed z-90 bottom-0 bg-cyan-700 mx-auto w-screen flex flex-row items-center px-10 py-3">
+			<ul className="flex flex-col">
+				{messages.map((message) => {if (message.from === "You") return (
+					<li key={message.at}
+						className='flex flex-col px-3 pt-5 items-end'>
+						<p className="text-gray-100 whitespace-normal py-2 px-3 bg-cyan-600 rounded-lg max-w-xl">
+							{message.content}
+						</p>
+						<p className="text-gray-400">
+							{new Date(message.at).toLocaleString()}
+						</p>
+					</li>
+				)
+				else return (
+					<li key={message.at}
+						className='flex flex-col px-3 pt-5 items-start'>
+						<p className="whitespace-normal py-2 px-3 bg-gray-300 rounded-lg max-w-xl">
+							{message.content}
+						</p>
+						<p className="text-gray-400">
+							{new Date(message.at).toLocaleString()}
+						</p>
+					</li>
+				)
+				})}
+			</ul>
+
+			{fetchError && (
+				<div className="p-4 my-4 text- text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
+					{fetchError}
+				</div>
+			)}
+
+			<div ref={bottomMost} className="p-7 mt-1.5"></div>
+
+			<form className="fixed z-90 bottom-0 bg-cyan-700 mx-auto w-screen flex flex-row items-center px-10 py-3">
 				<input
 					id="message"
 					name="message"
@@ -50,12 +104,12 @@ const Chat = () => {
 					className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:text-sm sm:leading-6"
 				/>
 
-				<button disabled={message == ''}
-					className="justify-center items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mx-2 sm:ml-16 font-semibold disabled:bg-gray-200"
+				<button disabled={(message === '') || (isLoading)} onClick={handleClick}
+					className="justify-center items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mx-2 sm:ml-8 font-semibold disabled:bg-gray-200 w-32"
 				>
-					Send
+					{isLoading ? "Sending..." : "Send"}
 				</button>
-			</div>
+			</form>
 		</>
 	)
 }

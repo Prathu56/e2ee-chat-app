@@ -10,7 +10,7 @@ const Home = () => {
 
 	useEffect(() => {
 		(async () => {
-			if (messages.length === 0) await fetchMessages();
+			await fetchMessages();
 		})();
 	}, [])
 
@@ -25,7 +25,6 @@ const Home = () => {
 			<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
 				{messages.map((message) => (
 					<li key={message.with}>
-						{/* <a href={'/chats/' + message.with} */}
 						<Link to={'/chats/' + message.with}
 							className='flex justify-between gap-x-6 py-5 px-7 bg-gray-100 hover:bg-gray-200'>
 							<div className="flex gap-x-4">
@@ -43,7 +42,6 @@ const Home = () => {
 								</p>
 							</div>
 						</Link>
-						{/* </a> */}
 					</li>
 				))}
 			</ul>

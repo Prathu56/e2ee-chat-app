@@ -2,20 +2,21 @@ import { useState } from "react";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { ecdhCompute } from "../helpers/cryptography";
+import { useNavigate } from "react-router-dom";
 
 const MessageModal = ({ isVisible, onClose }) => {
 	const [username, setUsername] = useState('');
 	const [message, setMessage] = useState('');
 	const { user } = useAuthContext();
 	const {
-		sendMessage, success, alertMessage, isLoading,
-		setSuccess, setAlertMessage, setIsLoading
+		sendMessage, error, isLoading,
+		setError, setIsLoading
 	} = useSendMessage();
+	const navigate = useNavigate();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		setSuccess(null);
-		setAlertMessage(null);
+		setError(null);
 		setIsLoading(true);
 
 		const response = await fetch('/api/helpers/get-pub/' + username, {
@@ -26,9 +27,8 @@ const MessageModal = ({ isVisible, onClose }) => {
 		const json = await response.json();
 
 		if (!response.ok) {
-			setSuccess(false);
+			setError(json.message);
 			setIsLoading(false);
-			setAlertMessage(json.message);
 		}
 		if (response.ok) {
 			// Compute the shared key
@@ -36,7 +36,7 @@ const MessageModal = ({ isVisible, onClose }) => {
 
 			await sendMessage(username, sharedKey, message);
 			setIsLoading(false);
-			setUsername(''); setMessage('');
+			navigate('/chats/' + username, { replace: true });
 		}
 	};
 
@@ -101,20 +101,15 @@ const MessageModal = ({ isVisible, onClose }) => {
 							type="submit"
 							className="flex w-full justify-center rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
 						>
-							Send
+							{isLoading ? "Sending..." : "Send"}
 						</button>
 					</div>
 				</form>
 
-				{(success === true) && (
-					<div className="p-4 my-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
-						{alertMessage}
-					</div>
-				)}
 
-				{(success === false) && (
+				{error && (
 					<div className="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
-						{alertMessage}
+						{error}
 					</div>
 				)}
 			</div>

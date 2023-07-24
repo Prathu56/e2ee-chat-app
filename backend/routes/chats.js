@@ -42,19 +42,22 @@ router.get('/:username', auth, async (req, res) => {
 		const unameA = req.user.username;
 		const unameB = req.params.username;
 
-		const userB = await users.findById(unameB, 'pub chats').lean();
+		const userB = await users.findById(unameB, 'chats').lean();
 		if (!userB) throw 404;
 
 		// Check if chat with user exists
 		if (!(unameA in userB.chats)) throw 409;
 
-		// Get the _id of chat, set the userB's public key to a variable
-		const chatId = userB.chats[unameA]; const pub = userB.pub;
+		// Get the _id of chat
+		const chatId = userB.chats[unameA]; 
+
+		// // Set the userB's public key to a variable
+		// const pub = userB.pub;
 
 		let chat = await chats.findById(chatId).lean();
-		chat = chat.messages.reverse(); // so the most recent appears at the top
+		chat = chat.messages;
 
-		res.status(200).send({ pub, chat });
+		res.status(200).send(chat);
 	} catch (e) {
 		let code = 500, message = e.message;
 		if (e == 404) { code = e, message = "User not found" }
