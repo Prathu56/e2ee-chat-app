@@ -17,7 +17,7 @@ export const useSendMessage = () => {
 		// Now use this shared key to encrypt the messageObj
 		const encMessage = aesEncrypt(messageObj, sharedKey);
 
-		const response = await fetch('/api/chats/' + unameB, {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/chats/' + unameB, {
 			method: 'POST',
 			headers: {
 				'Authorization': `Bearer ${user.token}`,

@@ -21,7 +21,7 @@ const Chat = () => {
 		(async () => {
 			if (unameB === "Notes") unameB = user.username;
 
-			const response = await fetch('/api/helpers/get-pub/' + unameB, {
+			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + unameB, {
 				method: 'GET',
 				headers: { 'Authorization': `Bearer ${user.token}` }
 			});

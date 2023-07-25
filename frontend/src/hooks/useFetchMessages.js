@@ -10,7 +10,7 @@ export const useFetchMessages = () => {
 	const fetchMessages = async () => {
 		setMessages([]); setError(null);
 
-		const response = await fetch('/api/chats', {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/chats', {
 			method: 'GET',
 			headers: { 'Authorization': `Bearer ${user.token}`}
 		});
