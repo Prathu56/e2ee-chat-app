@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRegister } from "../hooks/useRegister";
 
 const Register = () => {
@@ -11,6 +11,8 @@ const Register = () => {
 		
 		await register(username, password);
 	};
+
+	useEffect(() => setUsername(username.toLowerCase()), [username])
 
 	return (
 		<>
@@ -36,7 +38,7 @@ const Register = () => {
 									value={username}
 									autoComplete="username"
 									required
-									className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6 lowercase"
+									className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6"
 								/>
 							</div>
 						</div>

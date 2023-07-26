@@ -11,6 +11,14 @@ export const useRegister = () => {
 		setAlertMessage(null);
 		setIsLoading(true);
 
+		var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+		if (format.test(username)) {
+			setAlertType('fail');
+			setAlertMessage("Special characters, including spaces, not allowed in the username");
+			setIsLoading(false);
+			return;
+		}
+
 		let { pub, priv } = await ecdhGenerate();
 		const privEnc = aesEncrypt(priv, password);
 
