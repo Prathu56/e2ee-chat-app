@@ -24,7 +24,7 @@ function App() {
 					<Route path='/register'
 						element={!user ? <Register /> : <Navigate to='/' />}
 					/>
-					<Route path="/chats/:unameB"
+					<Route path="/chats/:username"
 						element={user ? <Chat /> : <Navigate to='/login' />}
 					/>
 				</Routes>

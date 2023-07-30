@@ -19,10 +19,10 @@ const Navbar = () => {
 			</div>
 
 			{user && (
-				<div className='flex flex-row items-center px-5'>
-					<span className='text-lg font-semibold text-gray-100 mr-10'>{user.username}</span>
+				<div className='flex flex-col sm:flex-row items-center px-5'>
+					<span className='text-base sm:text-lg font-semibold text-gray-100 sm:mr-10 truncate'>{user.username}</span>
 					<button onClick={handleClick}
-						className="justify-center items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base my-2 mx-5 font-semibold"
+						className="justify-center text-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-xs sm:text-base my-2 mx-5 font-semibold"
 					>
 						Log out
 					</button>
@@ -30,14 +30,14 @@ const Navbar = () => {
 			)}
 			
 			{!user && (
-				<div className='flex px-5'>
+				<div className='flex flex-col sm:flex-row px-5'>
 					<Link to='/login'>
-						<div className="justify-center items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base my-2 mx-5 font-semibold">
+						<div className="justify-center text-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-xs sm:text-base my-2 mx-5 font-semibold">
 							Log in
 						</div>
 					</Link>
 					<Link to='/register'>
-						<div className="justify-center items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base my-2 mx-5 font-semibold">
+						<div className="justify-center text-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-xs sm:text-base my-2 mx-5 font-semibold">
 							Register
 						</div>
 					</Link>

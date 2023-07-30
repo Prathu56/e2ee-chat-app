@@ -17,7 +17,7 @@ export const AuthContextProvider = ({ children }) => {
 	const [state, dispatch] = useReducer(authReducer, { user: null });
 
 	const verifyJWT = async (payload) => {
-		const response = await fetch('/api/helpers/verify', {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/verify', {
 			headers: { 'Authorization': `Bearer ${payload.token}` }
 		});
 
@@ -32,8 +32,6 @@ export const AuthContextProvider = ({ children }) => {
 		const user = JSON.parse(localStorage.getItem('user'));
 		if (user) verifyJWT(user);
 	}, [])
-
-	console.log("AuthContext state:", state);
 
 	return (
 		<AuthContext.Provider value={{ ...state, dispatch }}>

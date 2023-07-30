@@ -11,10 +11,18 @@ export const useRegister = () => {
 		setAlertMessage(null);
 		setIsLoading(true);
 
+		var format = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+		if (format.test(username)) {
+			setAlertType('fail');
+			setAlertMessage("Special characters, including spaces, not allowed in the username");
+			setIsLoading(false);
+			return;
+		}
+
 		let { pub, priv } = await ecdhGenerate();
 		const privEnc = aesEncrypt(priv, password);
 
-		const response = await fetch('/api/register', {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, password, pub, privEnc })

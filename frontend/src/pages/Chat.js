@@ -8,44 +8,51 @@ import { useSendMessage } from "../hooks/useSendMessage";
 import { useRef } from 'react';
 
 const Chat = () => {
-	let { unameB } = useParams();
+	let { username } = useParams();
 	const navigate = useNavigate();
 	const bottomMost = useRef(null);
 	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
-	const { fetchChat, messages, fetchError } = useFetchChat();
+	const [unameB, setUnameB] = useState(null);
+	const { fetchChat, fetchError, messages, id } = useFetchChat();
 	const { user } = useAuthContext();
-	const { sendMessage, error, setError, isLoading, setIsLoading } = useSendMessage();
+	const { sendMessage, error, isLoading } = useSendMessage();
 
 	useEffect(() => {
 		(async () => {
-			if (unameB === "Notes") unameB = user.username;
-
-			const response = await fetch('/api/helpers/get-pub/' + unameB, {
-				method: 'GET',
-				headers: { 'Authorization': `Bearer ${user.token}` }
-			});
-
-			let json = await response.json();
-
-			if (!response.ok) navigate('/', { replace: true });
-			if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
+			if (username === "Notes") setUnameB(user.username);
+			else setUnameB(username);
 		})();
 	}, [])
 
 	useEffect(() => {
 		(async () => {
-			if (sharedKey !== null) {
-				if (unameB === "Notes") unameB = user.username;
+			if (unameB) {
+				const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + unameB, {
+					method: 'GET',
+					headers: { 'Authorization': `Bearer ${user.token}` }
+				});
+
+				let json = await response.json();
+
+				if (!response.ok) navigate('/', { replace: true });
+				if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
+			}
+		})();
+	}, [unameB]);
+
+	useEffect(() => {
+		(async () => {
+			if (sharedKey) {
 				await fetchChat(sharedKey, unameB);
 				setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
 			}
 		})();
 	}, [sharedKey]);
 
+	// useEffect(() => {if (id) console.log(id)}, [id])
+
 	const handleClick = async (e) => {
-		// e.preventDefault();
-		if (unameB === "Notes") unameB = user.username;
 		await sendMessage(unameB, sharedKey, message);
 		setMessage('');
 		await fetchChat(sharedKey, unameB);
@@ -54,35 +61,36 @@ const Chat = () => {
 
 	return (
 		<>
-			<div className="sticky z-90 bg-cyan-700 mx-auto flex flex-row justify-center p-3 top-16 inset-y-0">
+			<div className="sticky z-90 bg-cyan-700 mx-auto flex flex-row justify-center p-3 top-20 sm:top-16 inset-y-0">
 				<div className="justify-center items-center bg-gray-100 border-0 focus:outline-none rounded text-base px-2 font-semibold text-gray-700 truncate">
 					{unameB}
 				</div>
 			</div>
 
 			<ul className="flex flex-col">
-				{messages.map((message) => {if (message.from === "You") return (
-					<li key={message.at}
-						className='flex flex-col px-3 pt-5 items-end'>
-						<p className="text-gray-100 whitespace-normal py-2 px-3 bg-cyan-600 rounded-lg max-w-xl">
-							{message.content}
-						</p>
-						<p className="text-gray-400">
-							{new Date(message.at).toLocaleString()}
-						</p>
-					</li>
-				)
-				else return (
-					<li key={message.at}
-						className='flex flex-col px-3 pt-5 items-start'>
-						<p className="whitespace-normal py-2 px-3 bg-gray-300 rounded-lg max-w-xl">
-							{message.content}
-						</p>
-						<p className="text-gray-400">
-							{new Date(message.at).toLocaleString()}
-						</p>
-					</li>
-				)
+				{messages.map((message) => {
+					if (message.from === "You") return (
+						<li key={message.at}
+							className='flex flex-col px-3 pt-5 items-end'>
+							<p className="text-gray-100 whitespace-normal py-2 px-3 bg-cyan-600 rounded-lg max-w-xl">
+								{message.content}
+							</p>
+							<p className="text-gray-400">
+								{new Date(message.at).toLocaleString()}
+							</p>
+						</li>
+					)
+					else return (
+						<li key={message.at}
+							className='flex flex-col px-3 pt-5 items-start'>
+							<p className="whitespace-normal py-2 px-3 bg-gray-300 rounded-lg max-w-xl">
+								{message.content}
+							</p>
+							<p className="text-gray-400">
+								{new Date(message.at).toLocaleString()}
+							</p>
+						</li>
+					)
 				})}
 			</ul>
 
@@ -92,9 +100,15 @@ const Chat = () => {
 				</div>
 			)}
 
+			{error && (
+				<div className="p-4 my-4 text- text-red-800 rounded-lg bg-red-100 m-14 text-center" role="alert">
+					{error}
+				</div>
+			)}
+
 			<div ref={bottomMost} className="p-7 mt-1.5"></div>
 
-			<form className="fixed z-90 bottom-0 bg-cyan-700 mx-auto w-screen flex flex-row items-center px-10 py-3">
+			<form className="fixed z-90 bottom-0 bg-cyan-700 mx-auto w-screen flex flex-row items-center px-3 sm:px-10 py-3">
 				<input
 					id="message"
 					name="message"

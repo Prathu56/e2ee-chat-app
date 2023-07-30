@@ -27,7 +27,7 @@ const Home = () => {
 					<li key={message.with}>
 						<Link to={'/chats/' + message.with}
 							className='flex justify-between gap-x-6 py-5 px-7 bg-gray-100 hover:bg-gray-200'>
-							<div className="flex gap-x-4">
+							<div className="flex gap-x-4 w-3/4">
 								<div className="min-w-0 flex-auto">
 									<p className="font-bold leading-6 text-gray-900 text-lg">{message.with}</p>
 									<p className="mt-3 truncate leading-5 text-gray-700">
