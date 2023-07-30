@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useAuthContext } from "./useAuthContext";
-import { aesDecrypt, ecdhCompute } from "../helpers/cryptography";
+import { aesDecrypt } from "../helpers/cryptography";
 
 export const useFetchChat = () => {
 	const [fetchError, setFetchError] = useState(null);
 	const [messages, setMessages] = useState([]);
+	const [id, setId] = useState(null);
 	const { user } = useAuthContext();
 
 	const fetchChat = async (sharedKey, unameB) => {
@@ -22,9 +23,9 @@ export const useFetchChat = () => {
 		}
 
 		if (response.ok) {
-			for (let i = 0; i < json.length; i++) {
+			for (let i = 0; i < json.messages.length; i++) {
 				// Decrypt message
-				let message = aesDecrypt(json[i], sharedKey);
+				let message = aesDecrypt(json.messages[i], sharedKey);
 
 				// Parse JSON
 				message = JSON.parse(message);
@@ -32,11 +33,12 @@ export const useFetchChat = () => {
 				// If message from logged in user, ...
 				message.from = (message.from === user.username) ? "You" : message.from;
 
-				json[i] = message;
+				json.messages[i] = message;
 			}
-			setMessages(json);
+			setMessages(json.messages);
+			setId(json._id);
 		}
 	};
 
-	return { fetchChat, fetchError, messages };
+	return { fetchChat, fetchError, messages, id };
 }

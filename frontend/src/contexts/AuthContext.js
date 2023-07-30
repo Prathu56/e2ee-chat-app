@@ -33,8 +33,6 @@ export const AuthContextProvider = ({ children }) => {
 		if (user) verifyJWT(user);
 	}, [])
 
-	console.log("AuthContext state:", state);
-
 	return (
 		<AuthContext.Provider value={{ ...state, dispatch }}>
 			{children}

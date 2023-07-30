@@ -20,7 +20,7 @@ const Navbar = () => {
 
 			{user && (
 				<div className='flex flex-col sm:flex-row items-center px-5'>
-					<span className='text-base sm:text-lg font-semibold text-gray-100 mr-10'>{user.username}</span>
+					<span className='text-base sm:text-lg font-semibold text-gray-100 sm:mr-10 truncate'>{user.username}</span>
 					<button onClick={handleClick}
 						className="justify-center text-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-xs sm:text-base my-2 mx-5 font-semibold"
 					>

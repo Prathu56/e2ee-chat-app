@@ -8,44 +8,51 @@ import { useSendMessage } from "../hooks/useSendMessage";
 import { useRef } from 'react';
 
 const Chat = () => {
-	let { unameB } = useParams();
+	let { username } = useParams();
 	const navigate = useNavigate();
 	const bottomMost = useRef(null);
 	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
-	const { fetchChat, messages, fetchError } = useFetchChat();
+	const [unameB, setUnameB] = useState(null);
+	const { fetchChat, fetchError, messages, id } = useFetchChat();
 	const { user } = useAuthContext();
 	const { sendMessage, error, isLoading } = useSendMessage();
 
 	useEffect(() => {
 		(async () => {
-			if (unameB === "Notes") unameB = user.username;
-
-			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + unameB, {
-				method: 'GET',
-				headers: { 'Authorization': `Bearer ${user.token}` }
-			});
-
-			let json = await response.json();
-
-			if (!response.ok) navigate('/', { replace: true });
-			if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
+			if (username === "Notes") setUnameB(user.username);
+			else setUnameB(username);
 		})();
 	}, [])
 
 	useEffect(() => {
 		(async () => {
-			if (sharedKey !== null) {
-				if (unameB === "Notes") unameB = user.username;
+			if (unameB) {
+				const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + unameB, {
+					method: 'GET',
+					headers: { 'Authorization': `Bearer ${user.token}` }
+				});
+
+				let json = await response.json();
+
+				if (!response.ok) navigate('/', { replace: true });
+				if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
+			}
+		})();
+	}, [unameB]);
+
+	useEffect(() => {
+		(async () => {
+			if (sharedKey) {
 				await fetchChat(sharedKey, unameB);
 				setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
 			}
 		})();
 	}, [sharedKey]);
 
+	// useEffect(() => {if (id) console.log(id)}, [id])
+
 	const handleClick = async (e) => {
-		// e.preventDefault();
-		if (unameB === "Notes") unameB = user.username;
 		await sendMessage(unameB, sharedKey, message);
 		setMessage('');
 		await fetchChat(sharedKey, unameB);

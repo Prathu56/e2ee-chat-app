@@ -49,13 +49,10 @@ router.get('/:username', auth, async (req, res) => {
 		if (!(unameA in userB.chats)) throw 409;
 
 		// Get the _id of chat
-		const chatId = userB.chats[unameA]; 
+		const chatId = userB.chats[unameA];
 
-		// // Set the userB's public key to a variable
-		// const pub = userB.pub;
-
-		let chat = await chats.findById(chatId).lean();
-		chat = chat.messages;
+		let chat = await chats.findById(chatId, 'messages').lean();
+		// chat = chat.messages;
 
 		res.status(200).send(chat);
 	} catch (e) {
@@ -67,7 +64,7 @@ router.get('/:username', auth, async (req, res) => {
 				message = "No chat with " + req.params.username + " found"
 			} else message = "No notes found"
 		}
-		res.status(code).send(message);
+		res.status(code).send({ message });
 	}
 });
 
