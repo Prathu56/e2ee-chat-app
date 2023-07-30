@@ -5,7 +5,7 @@ import { aesDecrypt } from "../helpers/cryptography";
 export const useFetchChat = () => {
 	const [fetchError, setFetchError] = useState(null);
 	const [messages, setMessages] = useState([]);
-	const [id, setId] = useState(null);
+	const [chatId, setChatId] = useState(null);
 	const { user } = useAuthContext();
 
 	const fetchChat = async (sharedKey, unameB) => {
@@ -36,9 +36,9 @@ export const useFetchChat = () => {
 				json.messages[i] = message;
 			}
 			setMessages(json.messages);
-			setId(json._id);
+			setChatId(json._id);
 		}
 	};
 
-	return { fetchChat, fetchError, messages, id };
+	return { fetchChat, fetchError, messages, chatId };
 }

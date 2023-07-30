@@ -1,12 +1,15 @@
 import { createContext, useEffect, useReducer } from 'react';
+import { socket } from '../hooks/useSocket';
 
 export const AuthContext = createContext();
 
 export const authReducer = (state, action) => {
 	switch (action.type) {
 		case 'LOGIN':
+			localStorage.setItem('user', JSON.stringify(action.payload));
 			return { user: action.payload };
 		case 'LOGOUT':
+			localStorage.removeItem('user');
 			return { user: null };
 		default:
 			return state;
@@ -21,9 +24,13 @@ export const AuthContextProvider = ({ children }) => {
 			headers: { 'Authorization': `Bearer ${payload.token}` }
 		});
 
-		if (response.ok) dispatch({ type: 'LOGIN', payload });
-		else {
-			localStorage.removeItem('user');
+		if (response.ok) {
+			socket.connect();
+			socket.emit('assign_id', payload.username);
+			dispatch({ type: 'LOGIN', payload });
+		}
+		if (!response.ok) {
+			socket.disconnect();
 			dispatch({ type: 'LOGOUT' });
 		}
 	}

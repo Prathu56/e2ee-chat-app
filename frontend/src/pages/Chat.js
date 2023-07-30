@@ -5,6 +5,7 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { ecdhCompute } from "../helpers/cryptography";
 import { useFetchChat } from "../hooks/useFetchChat";
 import { useSendMessage } from "../hooks/useSendMessage";
+import { socket } from "../hooks/useSocket";
 import { useRef } from 'react';
 
 const Chat = () => {
@@ -14,15 +15,13 @@ const Chat = () => {
 	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
 	const [unameB, setUnameB] = useState(null);
-	const { fetchChat, fetchError, messages, id } = useFetchChat();
-	const { user } = useAuthContext();
+	const { fetchChat, fetchError, messages, chatId } = useFetchChat();
 	const { sendMessage, error, isLoading } = useSendMessage();
+	const { user } = useAuthContext();
 
 	useEffect(() => {
-		(async () => {
-			if (username === "Notes") setUnameB(user.username);
-			else setUnameB(username);
-		})();
+		if (username === "Notes") setUnameB(user.username);
+		else setUnameB(username);
 	}, [])
 
 	useEffect(() => {
@@ -50,7 +49,13 @@ const Chat = () => {
 		})();
 	}, [sharedKey]);
 
-	// useEffect(() => {if (id) console.log(id)}, [id])
+	useEffect(() => {
+		if (chatId) socket.emit('join_chat', chatId);
+
+		return () => {
+			if (chatId) socket.emit('leave_chat', chatId);
+		}
+	}, [chatId])
 
 	const handleClick = async (e) => {
 		await sendMessage(unameB, sharedKey, message);
