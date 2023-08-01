@@ -5,7 +5,7 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { ecdhCompute } from "../helpers/cryptography";
 import { useFetchChat } from "../hooks/useFetchChat";
 import { useSendMessage } from "../hooks/useSendMessage";
-import { socket } from "../hooks/useSocket";
+import { useSocket } from "../hooks/useSocket";
 import { useRef } from 'react';
 
 const Chat = () => {
@@ -18,6 +18,7 @@ const Chat = () => {
 	const { fetchChat, fetchError, messages, chatId } = useFetchChat();
 	const { sendMessage, error, isLoading } = useSendMessage();
 	const { user } = useAuthContext();
+	const socket = useSocket();
 
 	useEffect(() => {
 		if (username === "Notes") setUnameB(user.username);
@@ -51,17 +52,18 @@ const Chat = () => {
 
 	useEffect(() => {
 		if (chatId) socket.emit('join_chat', chatId);
+	}, [chatId]);
 
-		return () => {
-			if (chatId) socket.emit('leave_chat', chatId);
-		}
-	}, [chatId])
+	useEffect(() => {
+		console.log("Socket change observed")
+	}, [socket])
 
 	const handleClick = async (e) => {
 		await sendMessage(unameB, sharedKey, message);
 		setMessage('');
 		await fetchChat(sharedKey, unameB);
 		setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
+		socket.emit('send', chatId);
 	}
 
 	return (

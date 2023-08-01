@@ -35,11 +35,6 @@ const io = new Server(server, {
 })();
 
 io.on('connection', (socket) => {
-	socket.on('assign_id', (username) => {
-		socket.id = username;
-		console.log("User " + socket.id + " connected")
-	});
-
 	socket.on('join_chat', (chatId) => {
 		socket.join(chatId);
 		console.log("User " + socket.id + " joined room " + chatId);
@@ -47,11 +42,8 @@ io.on('connection', (socket) => {
 
 	socket.on('send', (chatId) => {
 		socket.to(chatId).emit('receive');
-	})
-
-	socket.on('leave_chat', (chatId) => {
-		socket.leave(chatId);
-		console.log("User " + socket.id + " left room " + chatId);
+		// socket.emit('receive');
+		console.log("Message sent on " + chatId);
 	});
 
 	socket.on('disconnect', () => {
