@@ -5,8 +5,8 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { ecdhCompute } from "../helpers/cryptography";
 import { useFetchChat } from "../hooks/useFetchChat";
 import { useSendMessage } from "../hooks/useSendMessage";
-import { useSocket } from "../hooks/useSocket";
 import { useRef } from 'react';
+import io from 'socket.io-client';
 
 const Chat = () => {
 	let { username } = useParams();
@@ -18,11 +18,18 @@ const Chat = () => {
 	const { fetchChat, fetchError, messages, chatId } = useFetchChat();
 	const { sendMessage, error, isLoading } = useSendMessage();
 	const { user } = useAuthContext();
-	const socket = useSocket();
+	const [socket, setSocket] = useState(null);
 
 	useEffect(() => {
 		if (username === "Notes") setUnameB(user.username);
 		else setUnameB(username);
+
+		const socketInstance = io(process.env.REACT_APP_BACKEND_URL);
+		setSocket(socketInstance);
+
+		return () => {
+			socketInstance.disconnect();
+		};
 	}, [])
 
 	useEffect(() => {
@@ -53,10 +60,6 @@ const Chat = () => {
 	useEffect(() => {
 		if (chatId) socket.emit('join_chat', chatId);
 	}, [chatId]);
-
-	useEffect(() => {
-		console.log("Socket change observed")
-	}, [socket])
 
 	const handleClick = async (e) => {
 		await sendMessage(unameB, sharedKey, message);

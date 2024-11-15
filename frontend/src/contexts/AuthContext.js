@@ -1,6 +1,4 @@
 import { createContext, useEffect, useReducer } from 'react';
-import { useSocket } from '../hooks/useSocket';
-
 export const AuthContext = createContext();
 
 export const authReducer = (state, action) => {
@@ -18,7 +16,6 @@ export const authReducer = (state, action) => {
 
 export const AuthContextProvider = ({ children }) => {
 	const [state, dispatch] = useReducer(authReducer, { user: null });
-	const socket = useSocket();
 
 	const verifyJWT = async (payload) => {
 		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/verify', {
@@ -26,7 +23,6 @@ export const AuthContextProvider = ({ children }) => {
 		});
 
 		if (response.ok) {
-			// socket.emit('assign_id', payload.username);
 			dispatch({ type: 'LOGIN', payload });
 		}
 		if (!response.ok) {

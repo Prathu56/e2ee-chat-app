@@ -1,13 +1,11 @@
 import { useState } from "react"
 import { useAuthContext } from "./useAuthContext";
-import { useSocket } from './useSocket';
 import { aesDecrypt } from "../helpers/cryptography";
 
 export const useLogin = () => {
 	const [error, setError] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const { dispatch } = useAuthContext();
-	const socket = useSocket();
 
 	const login = async (username, password) => {
 		setError(null); setIsLoading(true);
@@ -27,8 +25,6 @@ export const useLogin = () => {
 		if (response.ok) {
 			// Decrypt privEnc using password, assign value to JSON
 			json.priv = aesDecrypt(json.privEnc, password); delete json.privEnc;
-
-			// socket.emit('assign_id', json.username);
 
 			dispatch({ type: 'LOGIN', payload: json });
 			setIsLoading(false);
