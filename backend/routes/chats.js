@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const { users, chats } = require('../models');
+const { default: mongoose } = require('mongoose');
 
 router.post('/:username', auth, async (req, res) => {
 	try {
@@ -67,6 +68,20 @@ router.get('/:username', auth, async (req, res) => {
 		res.status(code).send({ message });
 	}
 });
+
+router.get('/last/:chatId', auth, async (req, res) => {
+	try {
+		const chatId = mongoose.Types.ObjectId.createFromHexString(req.params.chatId);
+
+		// Get the last chat with the chatId
+		let chat = await chats.findById(chatId, { messages: { $slice: -1 }, updatedAt: 1 }).lean();
+
+		res.status(200).send(chat);
+	} catch (e) {
+		let code = 500, message = e.message;
+		res.status(code).send({ message });
+	}
+})
 
 router.get('/', auth, async (req, res) => {
 	try {

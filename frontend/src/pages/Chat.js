@@ -7,6 +7,7 @@ import { useFetchChat } from "../hooks/useFetchChat";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { useRef } from 'react';
 import io from 'socket.io-client';
+import { useFetchLastMessage } from "../hooks/useFetchLastMessage";
 
 const Chat = () => {
 	let { username } = useParams();
@@ -15,8 +16,9 @@ const Chat = () => {
 	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
 	const [unameB, setUnameB] = useState(null);
-	const { fetchChat, fetchError, messages, chatId } = useFetchChat();
+	const { fetchChat, fetchError, messages, setMessages, chatId } = useFetchChat();
 	const { sendMessage, error, isLoading } = useSendMessage();
+	const { fetchLastMessage, fetchLastMessageError } = useFetchLastMessage();
 	const { user } = useAuthContext();
 	const [socket, setSocket] = useState(null);
 
@@ -58,13 +60,34 @@ const Chat = () => {
 	}, [sharedKey]);
 
 	useEffect(() => {
-		if (chatId) socket.emit('join_chat', chatId);
+		if (chatId) {
+			socket.emit('join_chat', chatId);
+		}
 	}, [chatId]);
+
+	useEffect(() => {
+		if (chatId) {
+			const handleReceive = async () => {
+				const lastMessage = await fetchLastMessage(sharedKey, chatId);
+				setMessages((prevMessages) => [...prevMessages, lastMessage]);
+				setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
+			};
+	
+			socket.on("receive", handleReceive);
+	
+			// Cleanup listener when component unmounts or dependencies change
+			return () => {
+				socket.off("receive", handleReceive);
+			};
+		}
+	}, [chatId, fetchLastMessage, sharedKey, socket, bottomMost]);
+	
 
 	const handleClick = async (e) => {
 		await sendMessage(unameB, sharedKey, message);
 		setMessage('');
-		await fetchChat(sharedKey, unameB);
+		const lastMessage = await fetchLastMessage(sharedKey, chatId);
+		setMessages([...messages, lastMessage]);
 		setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
 		socket.emit('send', chatId);
 	}
@@ -107,6 +130,12 @@ const Chat = () => {
 			{fetchError && (
 				<div className="p-4 my-4 text- text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
 					{fetchError}
+				</div>
+			)}
+
+			{fetchLastMessageError && (
+				<div className="p-4 my-4 text- text-yellow-800 rounded-lg bg-yellow-100 m-14 text-center" role="alert">
+					{fetchLastMessageError}
 				</div>
 			)}
 

@@ -40,5 +40,5 @@ export const useFetchChat = () => {
 		}
 	};
 
-	return { fetchChat, fetchError, messages, chatId };
+	return { fetchChat, fetchError, messages, setMessages, chatId };
 }
