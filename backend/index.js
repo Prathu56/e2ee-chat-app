@@ -8,19 +8,14 @@ app.use(express.json());
 const cors = require('cors');
 app.use(cors());
 
-app.use('/api/register', require('./routes/register'));
-app.use('/api/login', require('./routes/login'));
-app.use('/api/chats', require('./routes/chats'));
-app.use('/api/helpers', require('./helpers'));
+app.use('/register', require('./routes/register'));
+app.use('/login', require('./routes/login'));
+app.use('/chats', require('./routes/chats'));
+app.use('/helpers', require('./helpers'));
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
-	cors: {
-		origin: process.env.FRONTEND_URL,
-		methods: ['GET', 'POST']
-	}
-});
+const io = new Server(server);
 
 (async () => {
 	try {
