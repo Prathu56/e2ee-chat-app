@@ -16,6 +16,7 @@ app.use('/helpers', require('./helpers'));
 const server = http.createServer(app);
 
 const io = new Server(server, {
+	path: "/socket.io/",
 	cors: {
 		origin: process.env.FRONTEND_URL,
 		methods: ["GET", "POST"],
