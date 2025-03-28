@@ -28,7 +28,6 @@ const Chat = () => {
 
 		const socketInstance = io(process.env.REACT_APP_FRONTEND_URL, {
 			path: "/socket.io/",
-			transports: ["polling", "websocket"],
 		});
 		setSocket(socketInstance);
 
