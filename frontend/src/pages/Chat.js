@@ -26,7 +26,9 @@ const Chat = () => {
 		if (username === "Notes") setUnameB(user.username);
 		else setUnameB(username);
 
-		const socketInstance = io(process.env.REACT_APP_BACKEND_URL);
+		const socketInstance = io(process.env.REACT_APP_FRONTEND_URL, {
+			path: "/socket.io/",
+		});
 		setSocket(socketInstance);
 
 		return () => {
