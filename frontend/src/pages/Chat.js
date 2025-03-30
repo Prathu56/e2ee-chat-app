@@ -113,9 +113,10 @@ const Chat = () => {
 		if (ok) {
 			const lastMessage = await fetchLastMessage(sharedKey, chatId);
 			setMessages([...messages, lastMessage]);
-			setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
 			socket.emit('send', chatId);
 		}
+		
+		setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
 	}
 
 	return (
