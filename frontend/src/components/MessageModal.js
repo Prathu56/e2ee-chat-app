@@ -19,7 +19,7 @@ const MessageModal = ({ isVisible, onClose }) => {
 		setError(null);
 		setIsLoading(true);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + username, {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/get-pub/' + username, {
 			method: 'GET',
 			headers: { 'Authorization': `Bearer ${user.token}` }
 		});

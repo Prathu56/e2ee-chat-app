@@ -11,7 +11,7 @@ export const useFetchChat = () => {
 	const fetchChat = async (sharedKey, unameB) => {
 		setMessages([]); setFetchError(null);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/chats/' + unameB, {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats/' + unameB, {
 			method: 'GET',
 			headers: { 'Authorization': `Bearer ${user.token}` }
 		});

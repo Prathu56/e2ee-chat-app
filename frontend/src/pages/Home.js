@@ -23,14 +23,36 @@ const Home = () => {
 			)}
 
 			<ul className="flex flex-1 flex-col divide-y divide-gray-500 mx-auto">
-				{messages.map((message) => (
+				{messages.map((message) => {
+					let PClassName = "mt-3 truncate leading-5 text-gray-700";
+
+					if (Array.isArray(message.content)) { // meaning, spam and/or phishing
+						let newContent = "["
+
+						if (message.content[0]) {
+							newContent += "Spam";
+						}
+
+						if (message.content[1]) {
+							if (newContent !== "[") newContent += " and ";
+							newContent += "Phishing";
+						}
+
+						newContent += " Detected]";
+						
+						// now setting all the variables as needed
+						message.content = newContent;
+						PClassName = "mt-3 truncate leading-5 text-red-600";
+					}
+
+					return (
 					<li key={message.with}>
 						<Link to={'/chats/' + message.with}
 							className='flex justify-between gap-x-6 py-5 px-7 bg-gray-100 hover:bg-gray-200'>
 							<div className="flex gap-x-4 w-3/4">
 								<div className="min-w-0 flex-auto">
 									<p className="font-bold leading-6 text-gray-900 text-lg">{message.with}</p>
-									<p className="mt-3 truncate leading-5 text-gray-700">
+									<p className={PClassName}>
 										{(message.from === "You") && <span className='font-semibold'>You: </span>}
 										{message.content}
 									</p>
@@ -43,7 +65,7 @@ const Home = () => {
 							</div>
 						</Link>
 					</li>
-				))}
+				)})}
 			</ul>
 
 			<MessageModal isVisible={showModal} onClose={() => setShowModal(false)} />

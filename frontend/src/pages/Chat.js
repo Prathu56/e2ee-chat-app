@@ -39,7 +39,7 @@ const Chat = () => {
 	useEffect(() => {
 		(async () => {
 			if (unameB) {
-				const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/get-pub/' + unameB, {
+				const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/get-pub/' + unameB, {
 					method: 'GET',
 					headers: { 'Authorization': `Bearer ${user.token}` }
 				});
@@ -86,12 +86,15 @@ const Chat = () => {
 	
 
 	const handleClick = async (e) => {
-		await sendMessage(unameB, sharedKey, message);
+		const ok = await sendMessage(unameB, sharedKey, message);
 		setMessage('');
-		const lastMessage = await fetchLastMessage(sharedKey, chatId);
-		setMessages([...messages, lastMessage]);
-		setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
-		socket.emit('send', chatId);
+		
+		if (ok) {
+			const lastMessage = await fetchLastMessage(sharedKey, chatId);
+			setMessages([...messages, lastMessage]);
+			setTimeout(() => bottomMost.current.scrollIntoView(), 0); // Workaround for scroll to bottom
+			socket.emit('send', chatId);
+		}
 	}
 
 	return (
@@ -104,11 +107,36 @@ const Chat = () => {
 
 			<ul className="flex flex-col">
 				{messages.map((message) => {
+					let youPClassName = "text-gray-100 whitespace-normal py-2 px-3 bg-cyan-600 rounded-lg max-w-xl";
+					let PClassName = "whitespace-normal py-2 px-3 bg-gray-300 rounded-lg max-w-xl";
+
+					let content = message.content;
+
+					if (Array.isArray(content)) { // meaning, spam and/or phishing
+						let newContent = "["
+
+						if (content[0]) {
+							newContent += "Spam";
+						}
+
+						if (content[1]) {
+							if (newContent !== "[") newContent += " and ";
+							newContent += "Phishing";
+						}
+
+						newContent += " Detected]";
+						
+						// now setting all the variables as needed
+						content = newContent;
+						youPClassName = "whitespace-normal py-2 px-3 bg-red-600 text-gray-100 rounded-lg max-w-xl";
+						PClassName = "whitespace-normal py-2 px-3 bg-red-600 text-gray-100 rounded-lg max-w-xl";
+					}
+
 					if (message.from === "You") return (
 						<li key={message.at}
 							className='flex flex-col px-3 pt-5 items-end'>
-							<p className="text-gray-100 whitespace-normal py-2 px-3 bg-cyan-600 rounded-lg max-w-xl">
-								{message.content}
+							<p className={youPClassName}>
+								{content}
 							</p>
 							<p className="text-gray-400">
 								{new Date(message.at).toLocaleString()}
@@ -118,8 +146,8 @@ const Chat = () => {
 					else return (
 						<li key={message.at}
 							className='flex flex-col px-3 pt-5 items-start'>
-							<p className="whitespace-normal py-2 px-3 bg-gray-300 rounded-lg max-w-xl">
-								{message.content}
+							<p className={PClassName}>
+								{content}
 							</p>
 							<p className="text-gray-400">
 								{new Date(message.at).toLocaleString()}

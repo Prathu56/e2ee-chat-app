@@ -9,7 +9,7 @@ export const useFetchLastMessage = () => {
 	const fetchLastMessage = async (sharedKey, chatId) => {
 		setFetchLastMessageError(null);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/chats/last/' + chatId, {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats/last/' + chatId, {
 			method: 'GET',
 			headers: { 'Authorization': `Bearer ${user.token}` }
 		});

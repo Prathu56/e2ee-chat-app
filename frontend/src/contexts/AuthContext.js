@@ -18,7 +18,7 @@ export const AuthContextProvider = ({ children }) => {
 	const [state, dispatch] = useReducer(authReducer, { user: null });
 
 	const verifyJWT = async (payload) => {
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/api/helpers/verify', {
+		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/verify', {
 			headers: { 'Authorization': `Bearer ${payload.token}` }
 		});
 
