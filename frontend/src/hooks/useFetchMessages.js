@@ -10,38 +10,51 @@ export const useFetchMessages = () => {
 	const fetchMessages = async () => {
 		setMessages([]); setError(null);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats', {
-			method: 'GET',
-			headers: { 'Authorization': `Bearer ${user.token}`}
-		});
+		let json;
 
-		let json = await response.json();
-		
-		if (!response.ok) {
-			setError(json.message);
-		}
-
-		if (response.ok) {
-			for (let i=0;i<json.length;i++) {
-				// Compute shared key
-				const sharedKey = await ecdhCompute(user.priv, json[i].pub);
-
-				// Decrypt message
-				let message = aesDecrypt(json[i].message, sharedKey);
-
-				// Parse JSON
-				message = JSON.parse(message);
-
-				// If message from logged in user, ...
-				message.from = (message.from === user.username) ? "You" : message.from;
-
-				json[i] = { 
-					// If chat with self, ...
-					with: (json[i].with === user.username) ? "Notes" : json[i].with, 
-					...message}
+		try {
+			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats', {
+				method: 'GET',
+				headers: { 'Authorization': `Bearer ${user.token}`}
+			});
+	
+			json = await response.json();
+			
+			if (!response.ok) {
+				setError(json.message);
+				return;
 			}
-			setMessages(json);
+		} catch (err) {
+			setError("Could not connect to the servers. Please try again");
+			return;
 		}
+	
+		for (let i=0;i<json.length;i++) {
+			// Compute shared key
+			let sharedKey;
+
+			try {
+				sharedKey = await ecdhCompute(user.priv, json[i].pub);
+			} catch (err) {
+				setError("Could not compute shared key. Please try again");
+				return;
+			}
+
+			// Decrypt message
+			let message = aesDecrypt(json[i].message, sharedKey);
+
+			// Parse JSON
+			message = JSON.parse(message);
+
+			// If message from logged in user, ...
+			message.from = (message.from === user.username) ? "You" : message.from;
+
+			json[i] = { 
+				// If chat with self, ...
+				with: (json[i].with === user.username) ? "Notes" : json[i].with, 
+				...message}
+		}
+		setMessages(json);
 	};
 
 	return { fetchMessages, error, messages };

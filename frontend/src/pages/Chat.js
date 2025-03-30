@@ -16,7 +16,7 @@ const Chat = () => {
 	const [sharedKey, setSharedKey] = useState(null);
 	const [message, setMessage] = useState('');
 	const [unameB, setUnameB] = useState(null);
-	const { fetchChat, fetchError, messages, setMessages, chatId } = useFetchChat();
+	const { fetchChat, fetchError, setFetchError, messages, setMessages, chatId } = useFetchChat();
 	const { sendMessage, error, isLoading } = useSendMessage();
 	const { fetchLastMessage, fetchLastMessageError } = useFetchLastMessage();
 	const { user } = useAuthContext();
@@ -38,17 +38,38 @@ const Chat = () => {
 
 	useEffect(() => {
 		(async () => {
-			if (unameB) {
+			if (!unameB) return;
+
+			setFetchError(null);
+			let json;
+
+			try {
 				const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/get-pub/' + unameB, {
 					method: 'GET',
 					headers: { 'Authorization': `Bearer ${user.token}` }
 				});
 
-				let json = await response.json();
+				json = await response.json();
 
-				if (!response.ok) navigate('/', { replace: true });
-				if (response.ok) setSharedKey(await ecdhCompute(user.priv, json.pub));
+				if (!response.ok) {
+					navigate('/', { replace: true });
+					return;
+				}
+			} catch (err) {
+				setFetchError("Could not connect to the servers. Please try again");
+				return;
 			}
+
+			let sharedKey;
+
+			try {
+				sharedKey = await ecdhCompute(user.priv, json.pub);
+			} catch (err) {
+				setFetchError("Could not compute shared key. Please try again");
+				return;
+			}
+
+			setSharedKey(sharedKey);
 		})();
 	}, [unameB]);
 

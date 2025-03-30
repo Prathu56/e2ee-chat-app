@@ -19,25 +19,39 @@ const MessageModal = ({ isVisible, onClose }) => {
 		setError(null);
 		setIsLoading(true);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/get-pub/' + username, {
-			method: 'GET',
-			headers: { 'Authorization': `Bearer ${user.token}` }
-		});
+		let json;
 
-		const json = await response.json();
-
-		if (!response.ok) {
-			setError(json.message);
+		try {
+			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/helpers/get-pub/' + username, {
+				method: 'GET',
+				headers: { 'Authorization': `Bearer ${user.token}` }
+			});
+	
+			json = await response.json();
+	
+			if (!response.ok) {
+				setError(json.message);
+				setIsLoading(false);
+				return;
+			}
+		} catch (err) {
+			setError("Could not connect to the servers. Please try again");
 			setIsLoading(false);
+			return;
 		}
-		if (response.ok) {
-			// Compute the shared key
-			const sharedKey = await ecdhCompute(user.priv, json.pub);
 
-			await sendMessage(username, sharedKey, message);
-			setIsLoading(false);
-			navigate('/chats/' + username, { replace: true });
+		// Compute the shared key
+		let sharedKey;
+		try {
+			sharedKey = await ecdhCompute(user.priv, json.pub);
+		} catch (err) {
+			setError("Could not compute shared key. Please try again");
+			return;
 		}
+
+		await sendMessage(username, sharedKey, message);
+		setIsLoading(false);
+		navigate('/chats/' + username, { replace: true });
 	};
 
 	const handleClose = (e) => {

@@ -10,25 +10,33 @@ export const useLogin = () => {
 	const login = async (username, password) => {
 		setError(null); setIsLoading(true);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/login', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ username, password })
-		});
+		let json;
 
-		const json = await response.json();
-
-		if (!response.ok) {
-			setError(json.message);
+		try {
+			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username, password })
+			});
+	
+			json = await response.json();
+	
+			if (!response.ok) {
+				setError(json.message);
+				setIsLoading(false);
+				return;
+			}
+		} catch (err) {
+			setError("Could not connect to the servers. Please try again");
 			setIsLoading(false);
+			return;
 		}
-		if (response.ok) {
-			// Decrypt privEnc using password, assign value to JSON
-			json.priv = aesDecrypt(json.privEnc, password); delete json.privEnc;
+			
+		// Decrypt privEnc using password, assign value to JSON
+		json.priv = aesDecrypt(json.privEnc, password); delete json.privEnc;
 
-			dispatch({ type: 'LOGIN', payload: json });
-			setIsLoading(false);
-		}
+		dispatch({ type: 'LOGIN', payload: json });
+		setIsLoading(false);
 	};
 
 	return { login, error, isLoading };

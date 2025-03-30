@@ -11,20 +11,28 @@ export const useSendMessage = () => {
 		setError(null);
 		setIsLoading(true);
 
-		// checking for spam or phishing
-		const aiResponse = await fetch(process.env.REACT_APP_AI_URL + '/predict/spam-phishing', {
-			method: 'POST',
-			headers: {
-				// 'Authorization': `Bearer ${user.token}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ text: content })
-		});
+		let aiJson;
 
-		const aiJson = await aiResponse.json();
-
-		if (!aiResponse.ok) {
-			setError(aiJson.message);
+		try {
+			// checking for spam or phishing
+			const aiResponse = await fetch(process.env.REACT_APP_AI_URL + '/predict/spam-phishing', {
+				method: 'POST',
+				headers: {
+					// 'Authorization': `Bearer ${user.token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ text: content })
+			});
+	
+			aiJson = await aiResponse.json();
+	
+			if (!aiResponse.ok) {
+				setError(aiJson.detail);
+				setIsLoading(false);
+				return false;
+			}
+		} catch (err) {
+			setError("Could not connect to the spam and phishing detection service. Please try again");
 			setIsLoading(false);
 			return false;
 		}
@@ -34,7 +42,6 @@ export const useSendMessage = () => {
 		spamAndPhishing[0] = aiJson.spam;
 		for (let url of aiJson.urls) {
 			spamAndPhishing[1] = spamAndPhishing[1] || url.phishing;
-			console.log(url);
 			if (spamAndPhishing[1]) { break }
 		}
 
@@ -49,25 +56,31 @@ export const useSendMessage = () => {
 		// Now use this shared key to encrypt the messageObj
 		const encMessage = aesEncrypt(messageObj, sharedKey);
 
-		const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats/' + unameB, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${user.token}`,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ message: encMessage })
-		});
-
-		const json = await response.json();
-
-		if (!response.ok) {
-			setError(json.message);
+		try {
+			const response = await fetch(process.env.REACT_APP_BACKEND_URL + '/chats/' + unameB, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${user.token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ message: encMessage })
+			});
+	
+			const json = await response.json();
+	
+			if (!response.ok) {
+				setError(json.message);
+				setIsLoading(false);
+				return false;
+			}
+			
+			setIsLoading(false);
+			return true;
+		} catch (err) {
+			setError("Could not connect to the servers. Please try again");
 			setIsLoading(false);
 			return false;
 		}
-		
-		setIsLoading(false);
-		return true;
 	};
 
 	return { 
