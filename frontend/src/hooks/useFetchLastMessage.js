@@ -17,7 +17,7 @@ export const useFetchLastMessage = () => {
 				headers: { 'Authorization': `Bearer ${user.token}` }
 			});
 	
-			let json = await response.json();
+			json = await response.json();
 	
 			if (!response.ok) {
 				setFetchLastMessageError(json.message);
