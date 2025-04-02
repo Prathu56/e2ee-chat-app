@@ -18,7 +18,7 @@ export const useSendMessage = () => {
 			const aiResponse = await fetch(process.env.REACT_APP_AI_URL + '/predict/spam-phishing', {
 				method: 'POST',
 				headers: {
-					// 'Authorization': `Bearer ${user.token}`,
+					'Authorization': `Bearer ${user.apiKey}`,
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({ text: content })
