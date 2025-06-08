@@ -12,9 +12,9 @@ const Navbar = () => {
 
 	return (
 		<header className="bg-cyan-600 body-font mx-auto flex px-5 py-2 flex-row items-center justify-between sticky top-0">
-			<div className='flex px-5'>
+			<div className='flex px-2 sm:px-5'>
 				<Link to='/'>
-					<span className="text-4xl font-semibold text-gray-100 justify-center">SecureChat</span>
+					<span className="text-2xl sm:text-4xl font-semibold text-gray-100 justify-center">SecureChat</span>
 				</Link>
 			</div>
 
