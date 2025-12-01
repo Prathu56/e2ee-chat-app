@@ -1,0 +1,419 @@
+openapi: 3.1.0
+info:
+  title: E2EE Chat App API
+  description: End-to-End Encrypted Chat Application API with JWT authentication
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: https://chat-nat.bitorsic.xyz/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User registration and login endpoints
+  - name: Chats
+    description: Chat and messaging operations
+  - name: Helpers
+    description: Helper utilities and user information
+
+paths:
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account with encrypted keys and registers them with the AI service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              username: "john_doe"
+              password: "SecurePassword123!"
+              pub: "{\"crv\":\"P-256\",\"ext\":true,\"key_ops\":[],\"kty\":\"EC\",\"x\":\"WKn-ZIGevcwGIyyrzFoZNBdaq9_TsqzGl96oc0CWuis\",\"y\":\"y77t-RvAHRKTsSGdIYUfweuOvwrvDD-Q3Hv5J0fSKbE\"}"
+              privEnc: "U2FsdGVkX1+encrypted_private_key_base64=="
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              example:
+                message: "Successfully registered as john_doe"
+        '409':
+          description: Username conflict or reserved username
+          content:
+            application/json:
+              examples:
+                username_taken:
+                  value:
+                    message: "Username already in use"
+                reserved_username:
+                  value:
+                    message: "Please use another username and try again"
+        '500':
+          description: Server error or AI service error
+          content:
+            application/json:
+              examples:
+                ai_service_error:
+                  value:
+                    message: "The AI service sent the error: User limit exceeded"
+                connection_error:
+                  value:
+                    message: "Could not connect to the AI service"
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticates user and returns JWT token, encrypted private key, and AI API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              username: "john_doe"
+              password: "SecurePassword123!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              example:
+                username: "john_doe"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG5fZG9lIiwiaWF0IjoxNjE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                privEnc: "U2FsdGVkX1+encrypted_private_key_base64=="
+                apiKey: "ai-service-api-key-abc123"
+        '400':
+          description: User not found
+          content:
+            application/json:
+              example:
+                message: "User not found"
+        '403':
+          description: Incorrect password
+          content:
+            application/json:
+              example:
+                message: "Incorrect password"
+        '500':
+          description: Server error or AI service error
+          content:
+            application/json:
+              examples:
+                ai_service_error:
+                  value:
+                    message: "The AI service sent the error: Service unavailable"
+                connection_error:
+                  value:
+                    message: "Could not connect to the AI service"
+
+  /chats:
+    get:
+      tags:
+        - Chats
+      summary: Get all chats for the authenticated user
+      description: Returns a list of all chats sorted by last message time in descending order
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of chats retrieved successfully
+          content:
+            application/json:
+              example:
+                - with: "alice_smith"
+                  pub: "{\"crv\":\"P-256\",\"ext\":true,\"key_ops\":[],\"kty\":\"EC\",\"x\":\"WKn-ZIGevcwGIyyrzFoZNBdaq9_TsqzGl96oc0CWuis\",\"y\":\"y77t-RvAHRKTsSGdIYUfweuOvwrvDD-Q3Hv5J0fSKbE\"}"
+                  message:
+                    text: "U2FsdGVkX1+encrypted_message_content"
+                    sender: "john_doe"
+                    _id: "507f1f77bcf86cd799439011"
+                  at: "2025-12-01T10:30:00.000Z"
+                - with: "bob_jones"
+                  pub: "{\"crv\":\"P-256\",\"ext\":true,\"key_ops\":[],\"kty\":\"EC\",\"x\":\"3l2Da_flYc15YAbc_xNh39u1aUwH67hddD8b-SqbXbQ\",\"y\":\"VxGH8CWj-hnKHqZuYQx_BQKm5WdX9m7PFuP_k-xvfRk\"}"
+                  message:
+                    text: "U2FsdGVkX1+another_encrypted_message"
+                    sender: "bob_jones"
+                    _id: "507f1f77bcf86cd799439012"
+                  at: "2025-12-01T09:15:00.000Z"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+        '404':
+          description: No chats found
+          content:
+            application/json:
+              example:
+                message: "No chats found. Click on the '+' below to send a message"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              example:
+                message: "Internal server error"
+
+  /chats/{username}:
+    post:
+      tags:
+        - Chats
+      summary: Send a message to a user
+      description: Sends an encrypted message to the specified user. Creates a new chat if one doesn't exist.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username of the recipient
+          schema:
+            type: string
+          example: "alice_smith"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              message:
+                text: "U2FsdGVkX1+encrypted_message_text"
+                sender: "john_doe"
+      responses:
+        '200':
+          description: Message sent successfully
+          content:
+            application/json:
+              examples:
+                message_sent:
+                  value:
+                    message: "Message sent to alice_smith"
+                note_taken:
+                  value:
+                    message: "Note taken"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              example:
+                message: "User not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              example:
+                message: "Internal server error"
+
+    get:
+      tags:
+        - Chats
+      summary: Get messages with a specific user
+      description: Retrieves all messages exchanged with the specified user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username of the other user in the chat
+          schema:
+            type: string
+          example: "alice_smith"
+      responses:
+        '200':
+          description: Chat messages retrieved successfully
+          content:
+            application/json:
+              example:
+                _id: "507f1f77bcf86cd799439011"
+                messages:
+                  - text: "U2FsdGVkX1+encrypted_first_message"
+                    sender: "john_doe"
+                    _id: "507f1f77bcf86cd799439012"
+                  - text: "U2FsdGVkX1+encrypted_second_message"
+                    sender: "alice_smith"
+                    _id: "507f1f77bcf86cd799439013"
+                  - text: "U2FsdGVkX1+encrypted_third_message"
+                    sender: "john_doe"
+                    _id: "507f1f77bcf86cd799439014"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              example:
+                message: "User not found"
+        '409':
+          description: No chat found with the specified user
+          content:
+            application/json:
+              examples:
+                no_chat:
+                  value:
+                    message: "No chat with alice_smith found"
+                no_notes:
+                  value:
+                    message: "No notes found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              example:
+                message: "Internal server error"
+
+  /chats/last/{chatId}:
+    get:
+      tags:
+        - Chats
+      summary: Get the last message from a specific chat
+      description: Retrieves the most recent message and update timestamp for a given chat ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          description: MongoDB ObjectId of the chat
+          schema:
+            type: string
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Last message retrieved successfully
+          content:
+            application/json:
+              example:
+                _id: "507f1f77bcf86cd799439011"
+                messages:
+                  - text: "U2FsdGVkX1+encrypted_latest_message"
+                    sender: "alice_smith"
+                    _id: "507f1f77bcf86cd799439015"
+                updatedAt: "2025-12-01T10:30:00.000Z"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              example:
+                message: "Internal server error"
+
+  /helpers/verify:
+    get:
+      tags:
+        - Helpers
+      summary: Verify JWT token
+      description: Validates the provided JWT token and confirms user authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token verified successfully
+          content:
+            application/json:
+              example:
+                message: "JWT Verified"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+
+  /helpers/get-pub/{username}:
+    get:
+      tags:
+        - Helpers
+      summary: Get public key of a user
+      description: Retrieves the public encryption key for a specified user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username of the user whose public key to retrieve
+          schema:
+            type: string
+          example: "alice_smith"
+      responses:
+        '200':
+          description: Public key retrieved successfully
+          content:
+            application/json:
+              example:
+                pub: "{\"crv\":\"P-256\",\"ext\":true,\"key_ops\":[],\"kty\":\"EC\",\"x\":\"WKn-ZIGevcwGIyyrzFoZNBdaq9_TsqzGl96oc0CWuis\",\"y\":\"y77t-RvAHRKTsSGdIYUfweuOvwrvDD-Q3Hv5J0fSKbE\"}"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              example:
+                message: "Invalid Token"
+        '403':
+          description: Not logged in
+          content:
+            application/json:
+              example:
+                message: "Not logged in"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              example:
+                message: "User not found"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from the /login endpoint. Token expires in 15 minutes.

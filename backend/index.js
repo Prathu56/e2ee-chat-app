@@ -8,6 +8,17 @@ app.use(express.json());
 const cors = require('cors');
 app.use(cors());
 
+// Swagger configuration
+const swaggerUi = require('swagger-ui-express');
+const yaml = require('js-yaml');
+const fs = require('fs');
+const path = require('path');
+const swaggerDocument = yaml.load(fs.readFileSync(path.join(__dirname, 'docs/openapi.yaml'), 'utf8'));
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+	customCss: '.swagger-ui .topbar { display: none }',
+}));
+
 app.use('/register', require('./routes/register'));
 app.use('/login', require('./routes/login'));
 app.use('/chats', require('./routes/chats'));
